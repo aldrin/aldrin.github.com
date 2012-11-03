@@ -16,8 +16,8 @@
   },
 
   "github": {
-    "repo": "https://api.github.com/repos/aldrin/web-backend",
-    "branch": "ajdweb/test/data"
+    "repo": "https://api.github.com/repos/aldrin/aldrin.github.com",
+    "branch": "backend/ajdweb/test/data"
   },
 
   "handlers": {
