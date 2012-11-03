@@ -193,7 +193,7 @@
   Ajd.get('router.applicationController').addObserver('current', function () {
     var current = Ajd.get('router.applicationController.current.title');
     if (current) {
-      document.title = "Aldrin's Pages | " + current;
+      document.title = "Aldrin's Notebook | " + current;
     }
   });
 
