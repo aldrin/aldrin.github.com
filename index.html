@@ -21,6 +21,7 @@
                 <a href="/#/"><i class="icon-home"></i></a>
                 <a href="http://twitter.com/ajdz"><i class="icon-twitter"></i></a>
                 <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a>
+                <a href="https://github.com/aldrin"><i class="icon-github"></i></a>
               </div>
               <small class="muted">&copy; {{thisYear}} Aldrin D'Souza</small>
             </footer>
@@ -37,6 +38,7 @@
 
     <script type="text/x-handlebars" data-template-name="page">
       {{#with Ajd.router.applicationController.current}}
+      {{#if isLoaded}}
       <h1>{{title}}</h1>
       <ul class="breadcrumb">
         <li><i class="icon-calendar"></i>{{when}}</li>
@@ -48,11 +50,15 @@
         {{/each}}
       </ul>
       {{{content.rendered}}}
+      {{else}}
+      Loading...
+      {{/if}}
       {{/with}}
     </script>
 
     <script type="text/x-handlebars" data-template-name="tag">
       {{#with Ajd.router.applicationController.current}}
+      {{#if isLoaded}}
       <center><h1>{{title}}</h1></center>
       <div class="row">
         <div class="span5">
@@ -93,6 +99,9 @@
           </ul>
         </div>
       </div>
+      {{else}}
+      Loading...
+      {{/if}}
       {{/with}}
     </script>
   </head>
@@ -103,8 +112,8 @@
     <script src="assets/js/libs/jquery.min.js"></script>
     <script src="assets/js/libs/ie-cors.js"></script>
     <script src="assets/js/libs/handlebars.js"></script>
-    <script src="assets/js/libs/ember.min.js"></script>
-    <script src="assets/js/libs/ember-data.min.js"></script>
+    <script src="assets/js/libs/ember.js"></script>
+    <script src="assets/js/libs/ember-data.js"></script>
     <script src="assets/js/libs/moment.min.js"></script>
     <script src="assets/js/ajdweb.js"></script>
   </body>

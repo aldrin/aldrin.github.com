@@ -16,12 +16,12 @@ made similar changes to the application datastore. The [datastore][gaepy] held t
 content of this page along with some meta data (things like title, date, etc.) for future
 reference. There, these lived, till you pointed your browser to this page.
 
-When you pointed your browser to this page, it sent a request to a web server that I
-[pay for][znet]. The server hosts only one static HTML page. So, regardless of what page your
-browser asked for, the web server would have returned the same [index][index] page. That page,
-however, referred to a bunch of other [assets][assets], one of which was a [script][ajdjs] that
-contained an [Ember.js][ember] application. The Ember application used a [router][embrout] to detect
-the identifier of this page from the URL (the bit after the `/#/`) and then used it to make a few
+When you pointed your browser to this page, it sent a request to the [Github Pages][gpage] web
+server. The server hosts only one static HTML page. So, regardless of what page your browser asked
+for, the web server would have returned the same [index][index] page. That page, however, referred
+to a bunch of other [assets][assets], one of which was a [script][ajdjs] that contained an
+[Ember.js][ember] application. The Ember application used a [router][embrout] to detect the
+identifier of this page from the URL (the bit after the `/#/`) and then used it to make a few
 [CORS][cors] Ajax queries back into to the GAE datastore using the [Ember Data][emberdata] REST
 adapter. The response ([1][getp], [2][page]) of these queries was mapped to the Ember data models
 and triggered the controllers to update the [handlebar][handle] placeholders in the static
@@ -41,7 +41,7 @@ edges that need grinding, but then, what on earth is ever finished.
 
 [ember]: http://emberjs.com
 [travis]: https://travis-ci.org
-[znet]: http://www.znetlive.com
+[gpage]: http://pages.github.com
 [handle]: http://handlebarsjs.com
 [ci]:https://travis-ci.org/#!/aldrin/web
 [marked]: https://github.com/chjj/marked
@@ -55,16 +55,16 @@ edges that need grinding, but then, what on earth is ever finished.
 [font]: http://fortawesome.github.com/Font-Awesome
 [hljs]: http://softwaremaniacs.org/soft/highlight/en
 [markdown]: http://daringfireball.net/projects/markdown
-[assets]: https://github.com/aldrin/web/blob/master/assets
-[content]: https://github.com/aldrin/web/tree/master/content
-[index]: https://github.com/aldrin/web/blob/master/index.html
 [getp]: http://aldrincontent.appspot.com/api/pages/self-portrait
 [cors]: http://en.wikipedia.org/wiki/Cross-origin_resource_sharing
-[webpy]: https://github.com/aldrin/web-backend/blob/master/app.yaml
-[ajdjs]:https://github.com/aldrin/web/blob/master/assets/js/ajdweb.js
+[assets]: https://github.com/aldrin/aldrin.github.com/blob/master/assets
 [page]: http://aldrincontent.appspot.com/api/contents/tech/self-portrait
-[gitpy]: https://github.com/aldrin/web-backend/blob/master/ajdweb/github.py
-[gaepy]: https://github.com/aldrin/web-backend/blob/master/ajdweb/gaestore.py
-[redpy]: https://github.com/aldrin/web-backend/blob/master/ajdweb/redistore.py
-[file]: https://github.com/aldrin/web/tree/master/content/tech/self-portrait.txt
+[content]: https://github.com/aldrin/aldrin.github.com/tree/master/content
+[index]: https://github.com/aldrin/aldrin.github.com/blob/master/index.html
+[webpy]: https://github.com/aldrin/aldrin.github.com/blob/master/backend/app.yaml
+[ajdjs]:https://github.com/aldrin/aldrin.github.com/blob/master/assets/js/ajdweb.js
+[gitpy]: https://github.com/aldrin/aldrin.github.com/blob/master/backend/ajdweb/github.py
+[gaepy]: https://github.com/aldrin/aldrin.github.com/blob/master/backend/ajdweb/gaestore.py
+[redpy]: https://github.com/aldrin/aldrin.github.com/blob/master/backend/ajdweb/redistore.py
+[file]: https://github.com/aldrin/aldrin.github.com/tree/master/content/tech/self-portrait.txt
 [embrout]:https://github.com/emberjs/ember.js/blob/master/packages/ember-routing/lib/router.js
