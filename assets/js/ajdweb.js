@@ -152,7 +152,8 @@
           var controller = router.get('applicationController');
           controller.set('current', {
             'title': 'Aldrin\'s Notebook',
-            'pages': router.get('pageController')
+            'pages': router.get('pageController'),
+            'isLoaded': true
           });
           controller.connectOutlet('tag');
         }
