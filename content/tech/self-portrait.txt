@@ -43,7 +43,6 @@ edges that need grinding, but then, what on earth is ever finished.
 [travis]: https://travis-ci.org
 [gpage]: http://pages.github.com
 [handle]: http://handlebarsjs.com
-[ci]:https://travis-ci.org/#!/aldrin/web
 [marked]: https://github.com/chjj/marked
 [github]: http://developer.github.com/v3
 [emacs]: http://www.gnu.org/software/emacs
@@ -52,6 +51,7 @@ edges that need grinding, but then, what on earth is ever finished.
 [bootstrap]: http://twitter.github.com/bootstrap
 [sync]: http://aldrincontent.appspot.com/api/sync
 [redispy]: https://github.com/andymccurdy/redis-py
+[ci]:http://travis-ci.org/aldrin/aldrin.github.com
 [font]: http://fortawesome.github.com/Font-Awesome
 [hljs]: http://softwaremaniacs.org/soft/highlight/en
 [markdown]: http://daringfireball.net/projects/markdown
