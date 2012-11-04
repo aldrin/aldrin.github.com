@@ -38,7 +38,7 @@ runs over a local git repo with Redis as the [datastore][redpy] (using [redis-py
 Finally, I must admit, most of the implementation choices made here were made because I wanted to
 educate myself on a few _trending_ web technologies. Actually, quite a few of these are not the best
 choices given the static nature of the content. Moreover, there are plenty of gaps and rough edges
-that need grinding. But, then, what on earth is ever finished.
+that need grinding. But then, what on earth is ever finished.
 
 [ember]: http://emberjs.com
 [travis]: https://travis-ci.org
