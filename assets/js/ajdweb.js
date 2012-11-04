@@ -15,8 +15,8 @@
       namespace: 'api',
       bulkCommit: false,
       ajax: function (url, type, hash) {
-        url = 'http://aldrincontent.appspot.com' + url; 
-//      url = 'http://localhost:8080' + url;
+//      url = 'http://aldrincontent.appspot.com' + url; 
+        url = 'http://localhost:8084' + url;
         hash.error = function (qXHR, textStatus, errorThrown) {
           Ajd.get('router').send('gotoError');
         }
@@ -82,7 +82,6 @@
   Ajd.Content = DS.Model.extend({
     matter: DS.attr('string'),
     rendered: function () {
-      console.log('foo');
       return Ajd.render(this.get('matter'));
     }.property('matter')
   });

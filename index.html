@@ -9,6 +9,8 @@
     <link rel="stylesheet" type="text/css" href="assets/css/font-awesome.css">
     <link rel="stylesheet" type="text/css" href="assets/css/ajdweb.css">
     <link rel="stylesheet" type="text/css" href="assets/css/code.css">
+    <script type="text/javascript" src="//use.typekit.net/mim1lpi.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
 
     <script type="text/x-handlebars" data-template-name="application">
       <div class="container">
@@ -46,6 +48,10 @@
         <li>
           <i class="icon-tag"></i>
           <a title="Tag" href="#" {{action gotoTag tag.id}}>{{tag.title}}</a>
+        </li>
+        <li class="divider"/>
+        <li class="pull-right">
+          <div class="fb-like" data-send="false" data-layout="button_count" data-width="450" data-show-faces="false"></div>
         </li>
         {{/each}}
       </ul>
@@ -116,5 +122,14 @@
     <script src="assets/js/libs/ember-data.js"></script>
     <script src="assets/js/libs/moment.min.js"></script>
     <script src="assets/js/ajdweb.js"></script>
+
+    <div id="fb-root"></div>
+    <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+      fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));</script>
   </body>
 </html>

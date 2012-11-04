@@ -8,17 +8,4 @@ The C header is carried into C++ with a few extensions. It brings in some esoter
 macros which can be used to scare small children. Take for instance `offsetof` which can be used to
 obtain the offset of members inside PODs.
 
-~~~~cpp
-
-
-~~~~
-
-
 [container_of]: http://www.kroah.com/log/linux/container_of.html
-
-
-
-
-
-
-
