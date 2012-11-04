@@ -15,8 +15,8 @@
       namespace: 'api',
       bulkCommit: false,
       ajax: function (url, type, hash) {
-//      url = 'http://aldrincontent.appspot.com' + url; 
-        url = 'http://localhost:8084' + url;
+        url = 'http://aldrincontent.appspot.com' + url; 
+        //url = 'http://localhost:8084' + url;
         hash.error = function (qXHR, textStatus, errorThrown) {
           Ajd.get('router').send('gotoError');
         }
