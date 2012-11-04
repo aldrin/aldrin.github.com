@@ -35,9 +35,10 @@ responsive grids, the icons, however, are from [Font Awesome][font]. The test ve
 runs over a local git repo with Redis as the [datastore][redpy] (using [redis-py][redispy].) I use
 [Travis][travis] as my [backend CI][ci] system.
 
-Finally, I must admit, most of the implementation choices for this website were made because I
-wanted to educate myself on a few trending web technologies. There are plenty of gaps and rough
-edges that need grinding, but then, what on earth is ever finished.
+Finally, I must admit, most of the implementation choices made here were made because I wanted to
+educate myself on a few _trending_ web technologies. Actually, quite a few of these are not the best
+choices given the static nature of the content. Moreover, there are plenty of gaps and rough edges
+that need grinding. But, then, what on earth is ever finished.
 
 [ember]: http://emberjs.com
 [travis]: https://travis-ci.org
