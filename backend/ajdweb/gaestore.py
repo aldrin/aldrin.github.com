@@ -36,11 +36,6 @@ class Version(db.Model):
     timestamp = db.DateTimeProperty(auto_now_add=True)
 
 
-class Id(db.Model):
-
-    pass
-
-
 class GaeStore(Datastore):
 
     def __init__(self, config):
@@ -105,7 +100,7 @@ class GaeStore(Datastore):
         tag['children'] = entry.children
         return tag
 
-    def add(self, e, version, data):
+    def add(self, e, version, data, url_id=None):
         ''' Adds the passed entry into the datastore'''
 
         entry = self.extract(e, data)
@@ -113,15 +108,20 @@ class GaeStore(Datastore):
         if not entry.title:
             return
 
-        existing_url_ids = [k.name() for k in Id.all(keys_only=True)]
+        if not url_id:
+            dedup = 1
+            dedup_id = entry.url_id
 
-        dedup = 1
-        dedup_id = entry.url_id
-        while dedup_id in existing_url_ids:
-            dedup_id = '{0}_{1}'.format(entry.url_id, dedup)
-            dedup = dedup + 1
+            existing_url_ids = [k.name() for k in Page.all(keys_only=True)]
+            existing_url_ids.append([k.name() for k in Tag.all(keys_only=True)])
 
-        entry.url_id = dedup_id
+            while dedup_id in existing_url_ids:
+                dedup_id = '{0}_{1}'.format(entry.url_id, dedup)
+                dedup = dedup + 1
+
+            entry.url_id = dedup_id
+        else:
+            entry.url_id = url_id
 
         # create or update the content entry.
         content = Content.get_by_key_name(e)
@@ -167,9 +167,6 @@ class GaeStore(Datastore):
         content.put()
         item.put()
 
-        # register the url id
-        Id(key_name=entry.url_id).put()
-
     def remove(self, e):
         content = Content.get_by_key_name(e)
         entry = Datastore.Entry(e)
@@ -191,9 +188,7 @@ class GaeStore(Datastore):
                     tag.put()
             page.delete()
         content.delete()
-        Id.get_by_key_name(entry.url_id).delete()
 
     def update(self, e, version, data):
         content = Content.get_by_key_name(e)
-        Id.get_by_key_name(content.url_id).delete()
-        self.add(e, version, data)
+        self.add(e, version, data, content.url_id)
