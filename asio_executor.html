@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Thread-Pool Executor using Boost.ASIO</title>
+    <meta name="author" content="Aldrin D'Souza">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     
+    <link rel="stylesheet" type="text/css" href="/theme/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/font-awesome.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/code.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/ajdweb.css">
+    <script type="text/javascript" src="//use.typekit.net/mim1lpi.js"></script>
+    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <article class="offset1 span10">
+          
+<h1> Thread-Pool Executor using Boost.ASIO </h1>
+<ul class="breadcrumb">
+  <li><i class="icon-calendar"></i>Sep 07, 2011</li>
+  
+  
+  <li><i class="icon-tag"></i> <a href="./tag/c.html">C++</a></li>
+  
+  <li><i class="icon-tag"></i> <a href="./tag/boost.html">Boost</a></li>
+  
+  
+</ul>
+<p>Consider the problem of writing a thread pool executor: i.e. an abstraction that takes arbitrary
+user defined tasks and executes them concurrently over a pool of threads. Here's a (slightly
+overweight) <a href="http://download.oracle.com/javase/6/docs/api/java/util/concurrent/ThreadPoolExecutor.html">example</a> of the abstraction from <code>java.util.concurrent</code>. In this note, I describe
+another (lean) implementation using a few bits from the treasure trove of <a href="http://www.boost.org/doc/libs/1_47_0/doc/html/boost_asio.html">Boost.ASIO</a>.</p>
+<p><a href="https://github.com/aldrin/ajd/blob/master/code/ajd/explore/test/src/executor_test.cc">Here's</a> what I expect from the executor (syntactically):</p>
+<div class="codehilite"><pre><span class="cp">#include &quot;executor.h&quot;</span>
+
+<span class="cp">#define BOOST_TEST_MODULE Executor</span>
+<span class="cp">#include &lt;boost/test/unit_test.hpp&gt;</span>
+
+<span class="kt">void</span> <span class="n">work</span><span class="p">()</span> <span class="p">{}</span>
+<span class="kt">void</span> <span class="n">other_work</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">c</span><span class="p">)</span> <span class="p">{}</span>
+<span class="k">struct</span> <span class="n">functor_work</span> <span class="p">{</span> <span class="kt">void</span> <span class="k">operator</span><span class="p">()()</span> <span class="p">{}</span> <span class="p">};</span>
+
+<span class="n">BOOST_AUTO_TEST_CASE</span><span class="p">(</span><span class="n">UsageSyntax</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">ajd</span><span class="o">::</span><span class="n">executor</span> <span class="n">e</span><span class="p">(</span><span class="mi">2</span><span class="p">);</span>
+  <span class="n">e</span><span class="p">.</span><span class="n">submit</span><span class="p">(</span><span class="n">work</span><span class="p">);</span>
+  <span class="n">e</span><span class="p">.</span><span class="n">submit</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="n">other_work</span><span class="p">,</span> <span class="s">&quot;input&quot;</span><span class="p">));</span>
+  <span class="n">e</span><span class="p">.</span><span class="n">submit</span><span class="p">(</span><span class="n">functor_work</span><span class="p">());</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>I expect to create an executor with the specified number of threads in its pool and to have it ready
+to jobs that I submit during the lifetime of the instance. The destructor must wait till the last
+submitted job is completed and then clean up everything. As far as the tasks go, anything that is
+invokable must be acceptable.</p>
+<p>With those requirements in mind, <a href="https://github.com/aldrin/ajd/blob/master/code/ajd/explore/main/include/executor.h">here</a>'s an complete implementation:</p>
+<div class="codehilite"><pre><span class="cp">#ifndef AJD_EXECUTOR_H_</span>
+<span class="cp">#define AJD_EXECUTOR_H_</span>
+
+<span class="cp">#include &lt;boost/asio.hpp&gt;</span>
+<span class="cp">#include &lt;boost/bind.hpp&gt;</span>
+<span class="cp">#include &lt;boost/thread.hpp&gt;</span>
+
+<span class="k">namespace</span> <span class="n">ajd</span>
+<span class="p">{</span>
+  <span class="k">using</span> <span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">boost</span><span class="o">::</span><span class="kr">thread</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">boost</span><span class="o">::</span><span class="n">thread_group</span><span class="p">;</span>
+  <span class="k">using</span> <span class="n">boost</span><span class="o">::</span><span class="n">asio</span><span class="o">::</span><span class="n">io_service</span><span class="p">;</span>
+
+  <span class="k">class</span> <span class="nc">executor</span>
+  <span class="p">{</span>
+  <span class="k">public</span><span class="o">:</span>
+
+    <span class="n">executor</span><span class="p">(</span><span class="n">size_t</span> <span class="n">n</span><span class="p">)</span><span class="o">:</span> <span class="n">service_</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">work_</span><span class="p">(</span><span class="n">service_</span><span class="p">)</span>
+    <span class="p">{</span>
+      <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">n</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+      <span class="p">{</span> <span class="n">pool_</span><span class="p">.</span><span class="n">create_thread</span><span class="p">(</span><span class="n">bind</span><span class="p">(</span><span class="o">&amp;</span><span class="n">io_service</span><span class="o">::</span><span class="n">run</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">service_</span><span class="p">));</span> <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="o">~</span><span class="n">executor</span><span class="p">()</span>
+    <span class="p">{</span>
+      <span class="n">service_</span><span class="p">.</span><span class="n">stop</span><span class="p">();</span>
+      <span class="n">pool_</span><span class="p">.</span><span class="n">join_all</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">F</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">submit</span><span class="p">(</span><span class="n">F</span> <span class="n">task</span><span class="p">)</span>
+    <span class="p">{</span>
+      <span class="n">service_</span><span class="p">.</span><span class="n">post</span><span class="p">(</span><span class="n">task</span><span class="p">);</span>
+    <span class="p">}</span>
+
+  <span class="k">protected</span><span class="o">:</span>
+    <span class="n">thread_group</span> <span class="n">pool_</span><span class="p">;</span>
+    <span class="n">io_service</span> <span class="n">service_</span><span class="p">;</span>
+    <span class="n">io_service</span><span class="o">::</span><span class="n">work</span> <span class="n">work_</span><span class="p">;</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+
+<span class="cp">#endif </span><span class="c1">// AJD_EXECUTOR_H_</span>
+</pre></div>
+
+
+<p>As someone who has written shabbily stitched executors in the past, I can't help but marvel at the
+economy of this implementation. No dispatch queues, no mutexes to guard share state, no condition
+variables to signal job arrivals, no shutdown flags, no nothing. Just the neat, power-packed
+=asio::io_service= facade and we're done. Of course, there's still quite a bit left before we use
+this in a complete application, but how cool is that for a start?</p>
+
+            <footer>
+              <div>
+                <a href="/"><i class="icon-home"></i></a>
+                <a href="http://twitter.com/ajdz"><i class="icon-twitter"></i></a>
+                <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a>
+                <a href="https://github.com/aldrin"><i class="icon-github"></i></a>
+              </div>
+              <small class="muted">&copy;  Aldrin D'Souza</small>
+            </footer>
+        </article>
+      </div>
+    </div>
+  </body>
+</html>

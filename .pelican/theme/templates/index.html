@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %} Aldrin's Notebook {%endblock%}
+
+{% block feed %}
+<link href="{{ FEED_DOMAIN }}/{{ FEED_ATOM }}" type="application/atom+xml" rel="alternate" title="Aldrin's Notebook Feed" />
+{% endblock %}
+
+{% block content %}        
+<center><h1>Aldrin's Notebook</h1></center>
+<div class="row">
+  <div class="span5">
+    <blockquote class="pull-right">
+      <p class="verse">
+        "The time has come," the Walrus said,<br/>
+        "To talk of many things:<br/>
+        Of shoes and ships and sealing-wax<br/>
+        Of cabbages and kings<br/>
+        And why the sea is boiling hot<br/>
+        And whether pigs have wings."
+      </p>
+      <small>
+        Lewis Caroll
+        <cite>
+          <a href="http://www.jabberwocky.com/carroll/walrus.html">The Walrus and The Carpenter</a>
+        </cite>
+      </small>
+    </blockquote>
+  </div>
+  <div class="span5 pull-right">
+    <ul class="unstyled index">
+      {% for article in articles %}
+      <li>
+        <small><span class="muted">{{ article.locale_date}}</span></small>
+        <span class="muted"><i class="icon-chevron-right"></i></span>
+        <a title="{{ article.tag }}" href="{{ article.url }}">{{article.title}}</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+
+{% endblock content %}
