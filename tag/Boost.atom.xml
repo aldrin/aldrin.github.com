@@ -3,7 +3,7 @@
 user defined tasks and executes them concurrently over a pool of threads. Here's a (slightly
 overweight) &lt;a href="http://download.oracle.com/javase/6/docs/api/java/util/concurrent/ThreadPoolExecutor.html"&gt;example&lt;/a&gt; of the abstraction from &lt;code&gt;java.util.concurrent&lt;/code&gt;. In this note, I describe
 another (lean) implementation using a few bits from the treasure trove of &lt;a href="http://www.boost.org/doc/libs/1_47_0/doc/html/boost_asio.html"&gt;Boost.ASIO&lt;/a&gt;.&lt;/p&gt;
-&lt;p&gt;&lt;a href="https://github.com/aldrin/ajd/blob/master/code/ajd/explore/test/src/executor_test.cc"&gt;Here's&lt;/a&gt; what I expect from the executor (syntactically):&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://github.com/aldrin/home/blob/master/web/code/c++/boost/executor_test.cc"&gt;Here's&lt;/a&gt; what I expect from the executor (syntactically):&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;quot;executor.h&amp;quot;&lt;/span&gt;
 
 &lt;span class="cp"&gt;#define BOOST_TEST_MODULE Executor&lt;/span&gt;
@@ -27,7 +27,7 @@ another (lean) implementation using a few bits from the treasure trove of &lt;a 
 to jobs that I submit during the lifetime of the instance. The destructor must wait till the last
 submitted job is completed and then clean up everything. As far as the tasks go, anything that is
 invokable must be acceptable.&lt;/p&gt;
-&lt;p&gt;With those requirements in mind, &lt;a href="https://github.com/aldrin/ajd/blob/master/code/ajd/explore/main/include/executor.h"&gt;here&lt;/a&gt;'s an complete implementation:&lt;/p&gt;
+&lt;p&gt;With those requirements in mind, &lt;a href="https://github.com/aldrin/home/blob/master/web/code/c++/boost/executor_test.h"&gt;here&lt;/a&gt;'s an complete implementation:&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#ifndef AJD_EXECUTOR_H_&lt;/span&gt;
 &lt;span class="cp"&gt;#define AJD_EXECUTOR_H_&lt;/span&gt;
 

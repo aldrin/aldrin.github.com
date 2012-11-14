@@ -10,5 +10,4 @@ AUTHOR = u"Aldrin J D'Souza"
 SITENAME = u"Aldrin's Notebook"
 TAG_FEED_ATOM = 'tag/%s.atom.xml'
 DEFAULT_DATE_FORMAT = '%b %d, %Y'
-FILES_TO_COPY = (('README.txt', 'README.md'), ('CNAME', 'CNAME'))
 MARKDOWN_EXTENSIONS = ['fenced_code', 'codehilite', 'extra']
