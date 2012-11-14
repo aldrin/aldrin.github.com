@@ -33,7 +33,7 @@
 user defined tasks and executes them concurrently over a pool of threads. Here's a (slightly
 overweight) <a href="http://download.oracle.com/javase/6/docs/api/java/util/concurrent/ThreadPoolExecutor.html">example</a> of the abstraction from <code>java.util.concurrent</code>. In this note, I describe
 another (lean) implementation using a few bits from the treasure trove of <a href="http://www.boost.org/doc/libs/1_47_0/doc/html/boost_asio.html">Boost.ASIO</a>.</p>
-<p><a href="https://github.com/aldrin/home/blob/master/web/code/c++/boost/executor_test.cc">Here's</a> what I expect from the executor (syntactically):</p>
+<p><a href="https://github.com/aldrin/home/blob/master/web/code/c%2B%2B/boost/executor.cpp">Here's</a> what I expect from the executor (syntactically):</p>
 <div class="codehilite"><pre><span class="cp">#include &quot;executor.h&quot;</span>
 
 <span class="cp">#define BOOST_TEST_MODULE Executor</span>
@@ -57,7 +57,7 @@ another (lean) implementation using a few bits from the treasure trove of <a hre
 to jobs that I submit during the lifetime of the instance. The destructor must wait till the last
 submitted job is completed and then clean up everything. As far as the tasks go, anything that is
 invokable must be acceptable.</p>
-<p>With those requirements in mind, <a href="https://github.com/aldrin/home/blob/master/web/code/c++/boost/executor_test.h">here</a>'s an complete implementation:</p>
+<p>With those requirements in mind, <a href="https://github.com/aldrin/home/blob/master/web/code/c%2B%2B/boost/executor.h">here's</a> an complete implementation:</p>
 <div class="codehilite"><pre><span class="cp">#ifndef AJD_EXECUTOR_H_</span>
 <span class="cp">#define AJD_EXECUTOR_H_</span>
 

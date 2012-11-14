@@ -19,13 +19,13 @@ img{
 
 article{
     background-color:white;
-    font-size:110%;
+    font-size:120%;
 }
 
-.codehilite {
-    font-size:90%;
-    line-height:90%;
-}
+/* .codehilite { */
+/*     font-size:90%; */
+/*     line-height:90%; */
+/* } */
 
 @media (min-width:767px){
     article{
