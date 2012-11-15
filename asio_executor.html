@@ -9,9 +9,6 @@
     <link rel="stylesheet" type="text/css" href="/theme/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/theme/css/font-awesome.css">
     <link rel="stylesheet" type="text/css" href="/theme/css/code.css">
-    <link rel="stylesheet" type="text/css" href="/theme/css/ajdweb.css">
-    <script type="text/javascript" src="//use.typekit.net/mim1lpi.js"></script>
-    <script type="text/javascript">try{Typekit.load();}catch(e){}</script>
   </head>
   <body>
     <div class="container">
@@ -19,6 +16,7 @@
         <article class="offset1 span10">
           
 <h1> Thread-Pool Executor using Boost.ASIO </h1>
+
 <ul class="breadcrumb">
   <li><i class="icon-calendar"></i>Sep 07, 2011</li>
   
@@ -107,9 +105,10 @@ invokable must be acceptable.</p>
 <p>As someone who has written shabbily stitched executors in the past, I can't help but marvel at the
 economy of this implementation. No dispatch queues, no mutexes to guard share state, no condition
 variables to signal job arrivals, no shutdown flags, no nothing. Just the neat, power-packed
-=asio::io_service= facade and we're done. Of course, there's still quite a bit left before we use
+<code>asio::io_service</code> facade and we're done. Of course, there's still quite a bit left before we use
 this in a complete application, but how cool is that for a start?</p>
 
+          <center>
             <footer>
               <div>
                 <a href="/"><i class="icon-home"></i></a>
@@ -118,12 +117,24 @@ this in a complete application, but how cool is that for a start?</p>
                 <a href="https://github.com/aldrin"><i class="icon-github"></i></a>
               </div>
               <small class="muted">&copy;  Aldrin D'Souza</small>
+              
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_shortname = 'a1drin';
+                
+                /* * * DON'T EDIT BELOW THIS LINE * * */
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+              
             </footer>
+          </center>
         </article>
       </div>
     </div>
-
-
     <script type="text/javascript">
       var _gaq = _gaq || [];
       _gaq.push(['_setAccount', 'UA-36079748-1']);

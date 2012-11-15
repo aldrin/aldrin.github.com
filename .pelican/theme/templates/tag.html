@@ -3,18 +3,16 @@
 {% block title %}Aldrin's Notebook > Pages tagged {{ tag }}{%endblock%}
 
 {% block feed %}
-<link href="/output/tag/{{tag}}.atom.xml" type="application/atom+xml" rel="alternate" title="Aldrin's Notebook :: {{tag}}" />
+<link href="/tag/{{tag}}.atom.xml" type="application/atom+xml" rel="alternate" title="Aldrin's Notebook :: {{tag}}" />
 {% endblock %}
 
 {% block content %}        
-<center><h1>{{tag}}</h1></center>
-<h4>Pages tagged {{tag}}</h4>
-<ul class="unstyled index">
+<center><h1><i class="icon-tag"></i> {{tag}}</h1></center>
+<p class="lead"> Pages tagged {{tag}}</p>
+<ul class="nav nav-pills nav-stacked">
   {% for article in articles %}
   <li>
-    <small><span class="muted">{{ article.locale_date}}</span></small>
-    <span class="muted"><i class="icon-chevron-right"></i></span>
-    <a href="/{{ article.url }}">{{article.title}}</a>
+    <a href="/{{ article.url }}">{{ article.locale_date}} <i class="icon-chevron-right"></i> {{article.title}}</a>
   </li>
   {% endfor %}
 </ul>

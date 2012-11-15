@@ -77,5 +77,5 @@ invokable must be acceptable.&lt;/p&gt;
 &lt;p&gt;As someone who has written shabbily stitched executors in the past, I can't help but marvel at the
 economy of this implementation. No dispatch queues, no mutexes to guard share state, no condition
 variables to signal job arrivals, no shutdown flags, no nothing. Just the neat, power-packed
-=asio::io_service= facade and we're done. Of course, there's still quite a bit left before we use
+&lt;code&gt;asio::io_service&lt;/code&gt; facade and we're done. Of course, there's still quite a bit left before we use
 this in a complete application, but how cool is that for a start?&lt;/p&gt;</summary><category term="C++"></category><category term="Boost"></category></entry></feed>
