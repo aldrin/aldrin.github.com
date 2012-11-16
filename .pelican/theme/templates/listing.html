@@ -1,0 +1,9 @@
+<ul class="nav nav-list">
+  {% for article in articles %}
+  <li>
+    <a href="/{{ article.url }}">
+      <center><i class="icon-chevron-right"></i> {{article.title}}</center>
+    </a>
+  </li>
+  {% endfor %}
+</ul>

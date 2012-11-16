@@ -1,19 +1,9 @@
 {% extends "base.html" %}
-
 {% block title %}Aldrin's Notebook > Pages tagged {{ tag }}{%endblock%}
-
 {% block feed %}
 <link href="/tag/{{tag}}.atom.xml" type="application/atom+xml" rel="alternate" title="Aldrin's Notebook :: {{tag}}" />
 {% endblock %}
-
 {% block content %}        
 <center><h1><i class="icon-tag"></i> {{tag}}</h1></center>
-<p class="lead"> Pages tagged {{tag}}</p>
-<ul class="nav nav-pills nav-stacked">
-  {% for article in articles %}
-  <li>
-    <a href="/{{ article.url }}">{{ article.locale_date}} <i class="icon-chevron-right"></i> {{article.title}}</a>
-  </li>
-  {% endfor %}
-</ul>
+{% include 'listing.html' %}
 {% endblock content %}
