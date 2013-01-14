@@ -30,7 +30,7 @@ the wrapper defines a convenience typedef as a shorthand:&lt;/p&gt;
 
 
 &lt;p&gt;Note that all wrapper definitions are inside the &lt;code&gt;ajd::crypto&lt;/code&gt; namespace. All executable code is
-assumed to be prefixed by a &lt;code&gt;using namespace std;&lt;/code&gt;.&lt;/p&gt;
+assumed to be prefixed by a &lt;code&gt;using namespace ajd;&lt;/code&gt;.&lt;/p&gt;
 &lt;h4&gt;Secure Random Number Generation&lt;/h4&gt;
 &lt;p&gt;OpenSSL provides an interface around the PRNG provided by the underlying operating system. It also
 provides a way to check if the PRNG has been initialized properly or if it needs additional seed
