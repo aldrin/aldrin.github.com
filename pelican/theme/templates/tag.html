@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Aldrin's Notebook > Pages tagged {{ tag }}{%endblock%}
+{% block feed %}
+<link href="/tag/{{tag}}.atom.xml" type="application/atom+xml" rel="alternate" title="Aldrin's Notebook :: {{tag}}" />
+{% endblock %}
+{% block content %}        
+<center><h1><i class="icon-tag"></i> {{tag}}</h1></center>
+{% include 'listing.html' %}
+{% endblock content %}

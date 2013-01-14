@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Cryptographic Primitives in C++</title>
+    <meta name="author" content="Aldrin D'Souza">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>body {background: url('/theme/img/bg.png'); text-align:justify;}</style>
+     
+    <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="/theme/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/code.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <article class="offset1 span10">
+          
+<h1> Cryptographic Primitives in C++ </h1>
+
+<ul class="breadcrumb">
+  <li><i class="icon-calendar"></i> Jan 14, 2013</li>
+  
+  
+  <li><i class="icon-tag"></i> <a href="./tag/security.html">Security</a></li>
+  
+  <li><i class="icon-tag"></i> <a href="./tag/c.html">C++</a></li>
+  
+  
+  <li class="active pull-right hidden-phone">
+    <div class="fb-like" data-send="false" data-layout="button_count" data-width="200" data-show-faces="false"></div>
+  </li>
+</ul>
+<p>This page walks through the implementation of an easy-to-use C++ wrapper over the OpenSSL
+<a href="http://www.openssl.org/docs/crypto/crypto.html">crypto library</a>. The idea is to go through the OpenSSL documentation once, make the right
+choices from a cryptographic point of view, and then, hide all the complexity behind a reusable
+header. The following primitives are typically used in the applications I write:</p>
+<ul>
+<li>Random Number Generation</li>
+<li>Password Based Symmetric Key Generation (using PBKDF2 with HMAC-SHA-256)</li>
+<li>Message Digests and Authentication Codes (using SHA-256 and HMAC-SHA-256)</li>
+<li>Authenticated Symmetric Key Encryption (using AES-128-GCM)</li>
+</ul>
+<p>The wrapper is a <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/crypto.h">single header file</a> that can be included wherever these primitives are
+needed. It includes OpenSSL and Boost headers and executables using it will need to have the OpenSSL
+libraries on their link line. Here is some <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/crypto.cpp">sample code</a> code and here are the <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/vectors.cpp">tests</a>
+to validate the implementation against the available test vectors.</p>
+<h4>Data Buffers</h4>
+<p>First things first, cryptographic routines work with blocks of data and we need a way to pass these
+in and out of the wrapper routines. We'd prefer passing data these as high level C++ containers or
+iterators ranges but OpenSSL routines work with C-style raw buffers. To bridge this gap in
+abstractions, the wrapper makes use of the <a href="http://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/buffer.html"><code>boost::asio::buffer</code></a> function. This function
+takes in any C++ contiguous storage container and extracts a raw pointer and length pair capable of
+being to OpenSSL routines. What this means is that you can pass a <code>std::vector</code>, <code>std::string</code>,
+<code>std::array</code>, <code>boost::array</code>, a POD array, or even a string literal to any of the routines that
+expect a data buffer. Furthermore, most of the blocks we deal with are 128 bits (16 byte) long, so
+the wrapper defines a convenience typedef as a shorthand:</p>
+<div class="codehilite"><pre><span class="k">namespace</span> <span class="n">ajd</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">crypto</span> <span class="p">{</span>
+    <span class="c1">/// A convenience typedef for a 128 bit block.</span>
+    <span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">,</span> <span class="mi">16</span><span class="o">&gt;</span> <span class="n">block</span><span class="p">;</span>
+</pre></div>
+
+
+<p>Note that all wrapper definitions are inside the <code>ajd::crypto</code> namespace. All executable code is
+assumed to be prefixed by a <code>using namespace std;</code>.</p>
+<h4>Secure Random Number Generation</h4>
+<p>OpenSSL provides an interface around the PRNG provided by the underlying operating system. It also
+provides a way to check if the PRNG has been initialized properly or if it needs additional seed
+data. The default initialization is usually sufficient so the wrapper provides just two methods
+related to random number generation.</p>
+<div class="codehilite"><pre><span class="c1">/// Checks if the underlying PRNG is sufficiently seeded. In the (exceptional) situation where</span>
+<span class="c1">/// this check returns &#39;false&#39;, you /must/ use the OpenSSL seed routines RAND_seed, RAND_add</span>
+<span class="c1">/// directly to add entropy to the underlying PRNG.</span>
+<span class="kt">bool</span> <span class="n">prng_ok</span><span class="p">()</span> <span class="p">{</span> <span class="k">return</span> <span class="n">RAND_status</span><span class="p">()</span> <span class="o">==</span> <span class="mi">1</span><span class="p">;</span> <span class="p">}</span>
+
+<span class="c1">/// Fills the passed container with random bytes.</span>
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">C</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">fill_random</span><span class="p">(</span><span class="n">C</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">)</span>
+</pre></div>
+
+
+<p>The following code demonstrates how these routines can be used to fill containers with random
+bytes. </p>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="n">random_generation</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">assert</span><span class="p">(</span><span class="n">crypto</span><span class="o">::</span><span class="n">prng_ok</span><span class="p">());</span>          <span class="c1">// check PRNG state</span>
+
+  <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">buffer</span><span class="p">;</span>               <span class="c1">// use the convenience typedef</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>        <span class="c1">// fill it with random bytes.</span>
+  <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">arr</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>            <span class="c1">// use a static POD array</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">arr</span><span class="p">);</span>           <span class="c1">// fill it with random bytes</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="n">vec</span><span class="p">(</span><span class="mi">16</span><span class="p">);</span> <span class="c1">// use a std::vector</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">vec</span><span class="p">);</span>           <span class="c1">// fill it with random bytes</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>The code above also serves as an example of how C++ containers can be passed into the wrapper
+routines. Throughout the wrapper, a templated argument (like <code>C &amp;c</code> here) can accept any continuous
+C++ container value (more precisely, any container that can be converted to a
+<code>boost::asio::const_buffer</code> or a <code>boost::asio::mutable_buffer</code> using the <code>boost::asio::buffer</code>
+function.)</p>
+<h4>Password Based Symmetric Key Generation</h4>
+<p>Symmetric ciphers require secure keys and one way to generate them is using the <code>fill_random</code>
+routine we saw above. More commonly, however, we'd want to derive the key bits from a user provided
+password. The standard way to do this is using the <a href="http://tools.ietf.org/html/rfc2898">PBKDF2</a> algorithm which iterates a pseudo
+random function with the passed password and salt a fixed number of times to derive the key
+bits. The wrapper invokes OpenSSL's implementation of the algorithm with HMAC-SHA-256 as the chosen
+pseudo random function. Here's the function signature:</p>
+<div class="codehilite"><pre><span class="c1">/// Derives a  key from a  password and salt  using PBKDF2 with  HMAC-SHA256 as the  chosen PRF.</span>
+<span class="c1">/// Although the routine can generate arbitrary length  keys, it is best to use crypto::block as</span>
+<span class="c1">/// the type for the key  parameter, since it fixes the key length to 128  bit which is what the</span>
+<span class="c1">/// other primitives in the wrapper (crypto::hash, crypto::cipher) require.</span>
+<span class="c1">/// @param key      (output) container populated with the key bits</span>
+<span class="c1">/// @param password (input)  container holding the user password</span>
+<span class="c1">/// @param salt     (input)  container holding the salt bytes</span>
+<span class="c1">/// @param c        (input)  PBKDF2 iteration count (default=10000)</span>
+<span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">C1</span><span class="p">,</span> <span class="k">typename</span> <span class="n">C2</span><span class="p">,</span> <span class="k">typename</span> <span class="n">C3</span><span class="o">&gt;</span>
+<span class="kt">void</span> <span class="n">derive_key</span><span class="p">(</span><span class="n">C3</span> <span class="o">&amp;</span><span class="n">key</span><span class="p">,</span> <span class="k">const</span> <span class="n">C1</span> <span class="o">&amp;</span><span class="n">passwd</span><span class="p">,</span> <span class="k">const</span> <span class="n">C2</span> <span class="o">&amp;</span><span class="n">salt</span><span class="p">,</span> <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Recall that the salt here can be any public value that will be persisted between application
+runs. Repeated runs of this key derivation with the same password and salt value produce the same
+key bits and that means we don't need to persist the actual key bits and deal with the complexity of
+secure storage of secret keys. However, this also assumes that the application can interact with the
+end user and prompt for the password. That assumption is not valid for some applications that
+require non-interactive start-up (ex: services, daemons)</p>
+<p>Here's a sample invocation of the key derivation routine:</p>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="n">key_generation</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">key</span><span class="p">;</span>                         <span class="c1">// 128 bit key</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">salt</span><span class="p">;</span>                        <span class="c1">// 128 bit salt</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">salt</span><span class="p">);</span>                 <span class="c1">// random salt.</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">derive_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s">&quot;password&quot;</span><span class="p">,</span> <span class="n">salt</span><span class="p">);</span> <span class="c1">// password derived key.</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h4>Message Digests and Message Authentication Codes</h4>
+<p>Cryptographic hashes are used as compression functions that <em>digest</em> an arbitrary sized message into
+a small fingerprint that uniquely represents it. Although their primary use is to serve as a
+building block for implementing integrity checks, a hash, by itself, cannot guarantee integrity. An
+adversary capable of modifying the message is also capable of recomputing the hash of the modified
+message to send along. For authenticity we need to use a message authentication code (MAC). A MAC is
+a keyed-hash, i.e. a hash that can only be generated by those who posses an assumed shared key. The
+assumption of secrecy of the key limits the possible origins and thus provides us the guarantee that
+an adversary couldn't have generated it.</p>
+<p>The wrapper uses <a href="http://csrc.nist.gov/groups/ST/toolkit/secure_hashing.html">SHA-256</a> for generating plain digests and <a href="http://tools.ietf.org/html/rfc2104">HMAC</a> with SHA-256 for
+MACs. These details, however, are hidden behind the following class:</p>
+<div class="codehilite"><pre><span class="c1">/// Generates a keyed or a plain cryptographic hash.</span>
+<span class="k">class</span> <span class="nc">hash</span><span class="o">:</span> <span class="n">boost</span><span class="o">::</span><span class="n">noncopyable</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="c1">/// A convenience typedef for a 256 SHA-256 value.</span>
+  <span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">,</span> <span class="mi">32</span><span class="o">&gt;</span> <span class="n">value</span><span class="p">;</span>
+
+  <span class="c1">/// The plain hash constructor. Initializes the underlying hash context.</span>
+  <span class="n">hash</span><span class="p">();</span>
+
+  <span class="c1">/// The keyed hash constructor. Initializes the underlying hash context.</span>
+  <span class="c1">/// @param key (input) container holding the secret key</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">C</span><span class="o">&gt;</span> <span class="n">hash</span><span class="p">(</span><span class="k">const</span> <span class="n">C</span> <span class="o">&amp;</span><span class="n">key</span><span class="p">);</span>
+
+  <span class="c1">/// Add the  contents of the passed  container to the  underlying context. This method  can be</span>
+  <span class="c1">/// invoked multiple times to add all the data that needs to be hashed.</span>
+  <span class="c1">/// @param data (input) container holding the input data</span>
+  <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">C</span><span class="o">&gt;</span> <span class="n">hash</span> <span class="o">&amp;</span><span class="n">update</span><span class="p">(</span><span class="k">const</span> <span class="n">C</span> <span class="o">&amp;</span><span class="n">data</span><span class="p">);</span>
+
+  <span class="c1">/// Get the  resultant hash value. This  method also reinitializes the  underlying context, so</span>
+  <span class="c1">/// the same instance can be reused to compute more hashes.</span>
+  <span class="c1">/// @param sha (output) container populated with the hash/mac bits</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">C</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">finalize</span><span class="p">(</span><span class="n">C</span> <span class="o">&amp;</span><span class="n">sha</span><span class="p">);</span>
+
+  <span class="c1">/// ... details ...</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>The following code shows how the class can be used:</p>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="n">message_digest</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">hash</span> <span class="n">md</span><span class="p">;</span>              <span class="c1">// the hash object</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">hash</span><span class="o">::</span><span class="n">value</span> <span class="n">sha</span><span class="p">;</span>      <span class="c1">// the hash value</span>
+  <span class="n">md</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="s">&quot;hello world!&quot;</span><span class="p">);</span>    <span class="c1">// add data</span>
+  <span class="n">md</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="s">&quot;see you world!&quot;</span><span class="p">);</span>  <span class="c1">// add more data</span>
+  <span class="n">md</span><span class="p">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">sha</span><span class="p">);</span>             <span class="c1">// get digest value</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="n">message_authentication_code</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">key</span><span class="p">;</span>            <span class="c1">// the hash key</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">key</span><span class="p">);</span>     <span class="c1">// random key will do (for now)</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">hash</span> <span class="n">h</span><span class="p">(</span><span class="n">key</span><span class="p">);</span>          <span class="c1">// the keyed-hash object</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">hash</span><span class="o">::</span><span class="n">value</span> <span class="n">mac</span><span class="p">;</span>      <span class="c1">// the mac value</span>
+  <span class="n">h</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="s">&quot;hello world!&quot;</span><span class="p">);</span>     <span class="c1">// add data</span>
+  <span class="n">h</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="s">&quot;see you world!&quot;</span><span class="p">);</span>   <span class="c1">// more data</span>
+  <span class="n">h</span><span class="p">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">mac</span><span class="p">);</span>              <span class="c1">// get the MAC code</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h4>Authenticated Symmetric Key Encryption</h4>
+<p>Encryption is the usually the end goal of using cryptographic primitives. In the past, I've used
+plain encryption (AES-128 in CBC or CTR mode) for providing confidentiality of data. Lately, I
+learned that though plain encryption is sufficient for confidentiality, it does not guard against
+tampering of encrypted data. These schemes can not detect modifications in ciphertext and decrypt
+the tweaked data as they would decrypt any other ciphertext. A smart adversary can make use of this
+fact to make calibrated modifications to the ciphertext and end up with the desired plaintext in
+the decrypted data.</p>
+<p>To recommended way to guard against these attacks is to use the cipher in an authenticated
+encryption mode like the <a href="http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf">Galois Counter Mode</a> (GCM). The wrapper provides the following class
+to deal with it:</p>
+<div class="codehilite"><pre><span class="c1">/// Provides authenticated encryption (AES-128-GCM)</span>
+<span class="k">class</span> <span class="nc">cipher</span> <span class="o">:</span> <span class="n">boost</span><span class="o">::</span><span class="n">noncopyable</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+  <span class="c1">/// Encryption mode  constructor, only takes key  and IV parameters.  Initializes the instance</span>
+  <span class="c1">/// for encryption. The  key should be 128  bit (since we&#39;re with AES-128).  Typically, the IV</span>
+  <span class="c1">/// should be 128 bit IV too but GCM supports  other IV sizes, so those can be passed to.</span>
+  <span class="c1">/// @param key (input) container holding 128 key bits (use crypto::block)</span>
+  <span class="c1">/// @param iv  (input) container holding 128 initialization vector bits (use crypto::block)</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">K</span><span class="p">,</span> <span class="k">typename</span> <span class="n">I</span><span class="o">&gt;</span> <span class="n">cipher</span><span class="p">(</span><span class="k">const</span> <span class="n">K</span> <span class="o">&amp;</span><span class="n">key</span><span class="p">,</span> <span class="k">const</span> <span class="n">I</span> <span class="o">&amp;</span><span class="n">iv</span><span class="p">);</span>
+
+  <span class="c1">/// Decryption  mode constructor,  takes key,  IV and  the authentication  tag  as parameters.</span>
+  <span class="c1">/// Initializes  the cipher  for  decryption and  sets  the passed  tag  up for  authenticated</span>
+  <span class="c1">/// decryption. The key  and IV should be the  same that were used to  generate the ciphertext</span>
+  <span class="c1">/// you&#39;re trying to decrypt (obviously). The seal parameter should contain the authentication</span>
+  <span class="c1">/// tag returned by the &#39;seal&#39; call after encryption.</span>
+  <span class="c1">/// @param key  (input) container holding 128 key bits (use crypto::block)</span>
+  <span class="c1">/// @param iv   (input) container holding 128 initialization vector bits (use crypto::block)</span>
+  <span class="c1">/// The seal parameter does not have a &#39;const&#39; with it because of the OpenSSL API.</span>
+  <span class="c1">/// @param seal (input) container holding 128 authentication tag bits (use crypto::block)</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">K</span><span class="p">,</span> <span class="k">typename</span> <span class="n">I</span><span class="p">,</span> <span class="k">typename</span> <span class="n">S</span><span class="o">&gt;</span> <span class="n">cipher</span><span class="p">(</span><span class="k">const</span> <span class="n">K</span> <span class="o">&amp;</span><span class="n">key</span><span class="p">,</span> <span class="k">const</span> <span class="n">I</span> <span class="o">&amp;</span><span class="n">iv</span><span class="p">,</span> <span class="n">S</span> <span class="o">&amp;</span><span class="n">seal</span><span class="p">);</span>
+
+  <span class="c1">/// The  cipher transformation  routine. This  encrypts or  decrypts the  bytes from  the &#39;in&#39;</span>
+  <span class="c1">/// buffer and places them into the &#39;out&#39;  buffer.  Since GCM does not require any padding the</span>
+  <span class="c1">/// output buffer size  should be the same  as the input.  If you  have unencrypted associated</span>
+  <span class="c1">/// data that must be added using &#39;associate_data&#39; first.</span>
+  <span class="c1">/// @param input  (input)  plaintext or ciphertext (for encryption or decryption resp.)</span>
+  <span class="c1">/// @param output (output) inverse of the input</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">I</span><span class="p">,</span> <span class="k">typename</span> <span class="n">O</span><span class="o">&gt;</span> <span class="n">cipher</span> <span class="o">&amp;</span><span class="n">transform</span><span class="p">(</span><span class="k">const</span> <span class="n">I</span> <span class="o">&amp;</span><span class="n">input</span><span class="p">,</span> <span class="n">O</span> <span class="o">&amp;</span><span class="n">output</span><span class="p">);</span>
+
+  <span class="c1">/// Adds associated authenticated data, i.e. data which is accounted for in the authentication</span>
+  <span class="c1">/// tag, but  is not encrypted.  Typically, this  is used for  associated meta data  (like the</span>
+  <span class="c1">/// packet header in a network protocol). This data must be added /before/ any message text is</span>
+  <span class="c1">/// added to the cipher.</span>
+  <span class="c1">/// @param aad (input) container with associated data</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">A</span><span class="o">&gt;</span> <span class="n">cipher</span> <span class="o">&amp;</span><span class="n">associate_data</span><span class="p">(</span><span class="k">const</span> <span class="n">A</span> <span class="o">&amp;</span><span class="n">aad</span><span class="p">);</span>
+
+  <span class="c1">/// The encryption finalization routine. Populates  the authentication tag &quot;seal&quot; that must be</span>
+  <span class="c1">/// passed  along for  successful decryption.   Any modifications  in the  cipher text  or the</span>
+  <span class="c1">/// associated data will be detected by the decryptor using this seal.</span>
+  <span class="c1">/// @param seal (output) container to be populated with the tag bits</span>
+  <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">S</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">seal</span><span class="p">(</span><span class="n">S</span> <span class="o">&amp;</span><span class="n">seal</span><span class="p">);</span>
+
+  <span class="c1">/// The  decryption  finalization  routine. Uses  the  authentication  tag  to verify  if  the</span>
+  <span class="c1">/// decryption was successful. If the tag verification fails an exception is thrown, if all is</span>
+  <span class="c1">/// well,  the method silently  returns.  If  an exception  is thrown,  the decrypted  data is</span>
+  <span class="c1">/// corrupted and /must/ not be used.</span>
+  <span class="kt">void</span> <span class="n">verify</span><span class="p">();</span>
+
+  <span class="c1">/// ... details ...</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>Authenticated encryption schemes produce an authentication tag (called <em>seal</em> here) along with the
+ciphertext. The tag needs to be presented during decryption and helps detect modifications to the
+ciphertext. The <code>crypto::cipher::seal</code> and <code>crypto::cipher::verify</code> method wrap this
+behavior. During encryption, after all the plaintext has been transformed to ciphertext the user
+code must invoke the <code>seal</code> operation to get the authentication tag. The decryption mode constructor
+requires this tag and after all the ciphertext has been transformed to plaintext the user code must
+invoke the <code>verify</code> method to check if the tag verifies properly. If <code>verify</code> throws an exception
+the decrypted plaintext is compromised and must not be used.</p>
+<p>Another feature of authenticated encryption schemes is that they allow addition of <em>authenticated
+associated data</em>. This data is not encrypted but is accounted for in the authentication tag,
+i.e. adversarial modifications to this unencrypted data will also be detected by the <code>verify</code>
+call. OpenSSL implementation requires that all associated data must be added <em>before</em> the plaintext
+is added.</p>
+<p>The following sample shows how the class can be used:</p>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="n">encryption</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">iv</span><span class="p">;</span>                                                <span class="c1">// initialization vector</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">key</span><span class="p">;</span>                                               <span class="c1">// encryption key</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">seal</span><span class="p">;</span>                                              <span class="c1">// container for the seal</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">iv</span><span class="p">);</span>                                         <span class="c1">// random initialization vector</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">key</span><span class="p">);</span>                                        <span class="c1">// random key will do (for now)</span>
+  <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">date</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">14</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">};</span>                              <span class="c1">// associated data</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">text</span><span class="p">(</span><span class="s">&quot;can you keep a secret?&quot;</span><span class="p">);</span>                      <span class="c1">// message (plain-text)</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="n">ciphertext</span><span class="p">(</span><span class="n">text</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>              <span class="c1">// container for encrypted data</span>
+  <span class="p">{</span>
+    <span class="n">crypto</span><span class="o">::</span><span class="n">cipher</span> <span class="n">cipher</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">iv</span><span class="p">);</span>                                <span class="c1">// initialize cipher (encrypt mode)</span>
+    <span class="n">cipher</span><span class="p">.</span><span class="n">associate_data</span><span class="p">(</span><span class="n">date</span><span class="p">);</span>                                   <span class="c1">// add associated data first</span>
+    <span class="n">cipher</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">ciphertext</span><span class="p">);</span>                            <span class="c1">// do transform (i.e. encrypt)</span>
+    <span class="n">cipher</span><span class="p">.</span><span class="n">seal</span><span class="p">(</span><span class="n">seal</span><span class="p">);</span>                                             <span class="c1">// get the encryption seal</span>
+  <span class="p">}</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="n">decrypted</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>         <span class="c1">// container for decrypted data</span>
+  <span class="p">{</span>
+    <span class="n">crypto</span><span class="o">::</span><span class="n">cipher</span> <span class="n">cipher</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">iv</span><span class="p">,</span> <span class="n">seal</span><span class="p">);</span>                          <span class="c1">// initialize cipher (decrypt mode)</span>
+    <span class="n">cipher</span><span class="p">.</span><span class="n">associate_data</span><span class="p">(</span><span class="n">date</span><span class="p">);</span>                                   <span class="c1">// add associated data first</span>
+    <span class="n">cipher</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">decrypted</span><span class="p">);</span>                       <span class="c1">// do transform (i.e. decrypt)</span>
+    <span class="n">cipher</span><span class="p">.</span><span class="n">verify</span><span class="p">();</span>                                               <span class="c1">// check the seal</span>
+  <span class="p">}</span>
+  <span class="n">assert</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">equal</span><span class="p">(</span><span class="n">text</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">text</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span> <span class="n">decrypted</span><span class="p">.</span><span class="n">begin</span><span class="p">()));</span> <span class="c1">// sanity (decrypted == plaintext)</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Modification to the ciphertext or the associated data will cause <code>crypto::cipher::verify</code> to throw
+an exception, as shown in the following snippet:</p>
+<div class="codehilite"><pre>  <span class="n">date</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">15</span><span class="p">;</span>                                                    <span class="c1">// modify the associated data</span>
+  <span class="p">{</span>
+    <span class="n">crypto</span><span class="o">::</span><span class="n">cipher</span> <span class="n">cipher</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">iv</span><span class="p">,</span> <span class="n">seal</span><span class="p">);</span>                          <span class="c1">// initialize cipher (decrypt mode)</span>
+    <span class="n">cipher</span><span class="p">.</span><span class="n">associate_data</span><span class="p">(</span><span class="n">date</span><span class="p">);</span>                                   <span class="c1">// add associated data first</span>
+    <span class="n">cipher</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">decrypted</span><span class="p">);</span>                       <span class="c1">// try decryption again</span>
+    <span class="k">try</span>
+    <span class="p">{</span>
+      <span class="n">cipher</span><span class="p">.</span><span class="n">verify</span><span class="p">();</span>                                             <span class="c1">// should throw an exception</span>
+      <span class="n">assert</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>                                               <span class="c1">// should never be reached</span>
+    <span class="p">}</span>
+    <span class="k">catch</span> <span class="p">(...)</span> <span class="p">{}</span>
+  <span class="p">}</span>
+
+  <span class="n">date</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">14</span><span class="p">;</span>                                                    <span class="c1">// revert associated data</span>
+  <span class="n">ciphertext</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="sc">&#39;\0&#39;</span><span class="p">;</span>                                            <span class="c1">// modify ciphertext.</span>
+  <span class="p">{</span>
+    <span class="n">crypto</span><span class="o">::</span><span class="n">cipher</span> <span class="n">cipher</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">iv</span><span class="p">,</span> <span class="n">seal</span><span class="p">);</span>                          <span class="c1">// initialize cipher (decrypt mode)</span>
+    <span class="n">cipher</span><span class="p">.</span><span class="n">associate_data</span><span class="p">(</span><span class="n">date</span><span class="p">);</span>                                   <span class="c1">// add associated data first</span>
+    <span class="n">cipher</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">decrypted</span><span class="p">);</span>                       <span class="c1">// try decryption again</span>
+    <span class="k">try</span>
+    <span class="p">{</span>
+      <span class="n">cipher</span><span class="p">.</span><span class="n">verify</span><span class="p">();</span>                                             <span class="c1">// should throw an exception</span>
+      <span class="n">assert</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>                                               <span class="c1">// should never be reached</span>
+    <span class="p">}</span>
+    <span class="k">catch</span> <span class="p">(...)</span> <span class="p">{}</span>
+  <span class="p">}</span>
+</pre></div>
+
+
+<p>That completes the list of primitives we started off with. There's more to be done, specifically for
+public key cryptography, but that is for some other day.</p>
+
+          <center>
+            <footer>
+              <div>
+                <a href="https://github.com/aldrin"><i class="icon-github-alt"></i></a>
+                
+                <a href="/"><i class="icon-home"></i></a>
+                
+                <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a>
+              </div>
+              <small class="muted">&copy; 2013 Aldrin D'Souza</small>
+            </footer>
+          </center>
+        </article>
+      </div>
+    </div>
+    <!--
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-36079748-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    <div id="fb-root"></div>
+    <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+      fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));</script>
+-->
+  </body>
+</html>

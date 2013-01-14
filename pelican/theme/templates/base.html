@@ -2,13 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Aldrin's Notebook > Pages tagged C++</title>
+    <title>{%block title %} {% endblock %}</title>
     <meta name="author" content="Aldrin D'Souza">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>body {background: url('/theme/img/bg.png'); text-align:justify;}</style>
-    
-<link href="/tag/C++.atom.xml" type="application/atom+xml" rel="alternate" title="Aldrin's Notebook :: C++" />
-
+    {%block feed %} {% endblock %}
     <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
     <link rel="stylesheet" type="text/css" href="/theme/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/theme/css/font-awesome.min.css">
@@ -18,26 +16,19 @@
     <div class="container">
       <div class="row">
         <article class="offset1 span10">
-                  
-<center><h1><i class="icon-tag"></i> C++</h1></center>
-<ul class="nav nav-list">
-  
-  <li>
-    <a href="/crypto-primitives.html">
-      <center>Jan 14, 2013 <i class="icon-double-angle-right"></i> Cryptographic Primitives in C++</center>
-    </a>
-  </li>
-  
-</ul>
-
+          {%block content %} {% endblock %}
           <center>
             <footer>
               <div>
                 <a href="https://github.com/aldrin"><i class="icon-github-alt"></i></a>
-                
-                <a href="/tag/C++.atom.xml"><i class="icon-rss"></i></a>
+                {% if tag %}
+                <a href="/tag/{{tag}}.atom.xml"><i class="icon-rss"></i></a>
                 <a href="/"><i class="icon-home"></i></a>
-                
+                {% elif article %}
+                <a href="/"><i class="icon-home"></i></a>
+                {% else %}
+                <a href="{{FEED_DOMAIN}}/{{FEED_ATOM}}"><i class="icon-rss"></i></a>                
+                {% endif %}
                 <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a>
               </div>
               <small class="muted">&copy; 2013 Aldrin D'Souza</small>
