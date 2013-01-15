@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Using doPrivileged</title>
+    <meta name="author" content="Aldrin D'Souza">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     
+    <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="/theme/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/code.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="row">
+        <article class="offset1 span10">
+          
+<h1> Using doPrivileged </h1>
+
+<ul class="breadcrumb">
+  <li><i class="icon-calendar"></i> May 19, 2010</li>
+  
+  
+  <li><i class="icon-tag"></i> <a href="./tag/security.html">Security</a></li>
+  
+  
+  <li class="pull-right hidden-phone">
+    <a href="#feedback" class="link" data-toggle="modal">
+      <i class="icon-comment-alt"></i>
+    </a>
+  </li>
+</ul>
+<p>The <code>doPrivileged</code> API enables a few use cases which wouldn't be possible without it.  It is quite
+neatly <a href="http://java.sun.com/j2se/1.4.2/docs/guide/security/doprivileged.html">documented</a> but it took me a while to really get a hang of its usage. This note shares
+my understanding on the usage and the capabilities of this neat little extension to the Java access
+control framework.</p>
+<p>Consider the task of implementing the following protected resource:</p>
+<div class="codehilite"><pre><span class="c1">// code-base &#39;file:///code/resource&#39;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Resource</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">read</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">RuntimePermission</span> <span class="n">permission</span> <span class="o">=</span> <span class="k">new</span> <span class="n">RuntimePermission</span><span class="o">(</span><span class="s">&quot;resource.read&quot;</span><span class="o">);</span>
+    <span class="n">AccessController</span><span class="o">.</span><span class="na">checkPermission</span><span class="o">(</span><span class="n">permission</span><span class="o">);</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;read&quot;</span><span class="o">);</span> <span class="c1">// actual read implementation </span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">RuntimePermission</span> <span class="n">permission</span> <span class="o">=</span> <span class="k">new</span> <span class="n">RuntimePermission</span><span class="o">(</span><span class="s">&quot;resource.write&quot;</span><span class="o">);</span>
+    <span class="n">AccessController</span><span class="o">.</span><span class="na">checkPermission</span><span class="o">(</span><span class="n">permission</span><span class="o">);</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;write&quot;</span><span class="o">);</span> <span class="c1">// actual write implementation</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>The resource has two operations which check for the necessary permission before executing the the
+actual implementation. This allows us to control access to the operations even in cases when the
+resource is used from arbitrary user code. For example, we can implement read-only access to the
+resource by enforcing the following policy (assuming that the resource and user classes belong to
+separate code-bases)</p>
+<div class="codehilite"><pre><span class="n">grant</span> <span class="n">codebase</span> &quot;<span class="n">file</span><span class="p">:</span><span class="o">///</span><span class="n">code</span><span class="o">/</span><span class="n">resource</span>&quot; <span class="p">{</span>
+ <span class="n">permission</span> <span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">RuntimePermission</span> &quot;<span class="n">resource</span><span class="p">.</span>####&quot;<span class="p">;</span>
+<span class="p">};</span>
+<span class="n">grant</span> <span class="n">codebase</span> &quot;<span class="n">file</span><span class="p">:</span><span class="o">///</span><span class="n">code</span><span class="o">/</span><span class="n">user</span>&quot; <span class="p">{</span>
+ <span class="n">permission</span> <span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">RuntimePermission</span> &quot;<span class="n">resource</span><span class="p">.</span><span class="n">read</span>&quot;<span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>Such a strict policy might limit a few useful use cases. For example, it might be useful to allow
+the user code to write to the resource, if we can program reliable tests that it writes responsibly
+without corrupting the resource. One possible way to implement such a system is to introduce a
+wrapper between the user and the resource which intercepts all the writes and block the
+illegal/harmful ones. Something like the following:</p>
+<div class="codehilite"><pre><span class="c1">// code-base &#39;file:///code/resource&#39;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ResourceWrapper</span> <span class="o">{</span>
+  <span class="kd">private</span> <span class="n">Resource</span> <span class="n">resource</span><span class="o">;</span>
+
+  <span class="kd">public</span> <span class="nf">ResourceWrapper</span><span class="o">(</span><span class="n">Resource</span> <span class="n">r</span><span class="o">){</span> <span class="n">resource</span> <span class="o">=</span> <span class="n">r</span><span class="o">;</span> <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">if</span><span class="o">(</span><span class="n">writeIsBad</span><span class="o">)</span> <span class="c1">// filter out the bad stuff.</span>
+     <span class="k">return</span><span class="o">;</span> 
+
+    <span class="n">resource</span><span class="o">.</span><span class="na">write</span><span class="o">();</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>As we own and control the wrapper code we grant it all permissions over the resource, hoping that
+well behaved user code will be able to write to the resource by invoking the wrapper instead of the
+resource directly.</p>
+<p>The trouble is that the access controller, by default, requires that the needed permission is
+granted to <em>every</em> protection domain on the call stack. <em>We</em> know that wrapper is trusted and
+guarantees that the writes it lets through are harmless regardless of where they orignated from, but
+the access controller doesn't. What we need is a mechanism by which a trusted protection domain can
+confer its own permissions to a call originating from an untrusted domain. And that, is exactly,
+what the <code>doPrivileged</code> does.</p>
+<p>All that a <code>doPrivileged</code> call does is mark the protection domain which invoked it as
+<em>privileged</em>. If a <em>privileged</em> domain on the stack has the required permission, the call succeeds
+regardless of whether or not the domains below it on the call-stack have the permission. So if our
+wrapper is modified as follows:</p>
+<div class="codehilite"><pre><span class="c1">// code-base &#39;file:///code/resource&#39;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ResourceWrapper</span> <span class="o">{</span>
+  <span class="c1">//...</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">if</span><span class="o">(</span><span class="n">writeIsBad</span><span class="o">)</span> <span class="c1">// filter out the bad stuff.</span>
+      <span class="k">return</span><span class="o">;</span> 
+
+    <span class="n">AccessController</span><span class="o">.</span><span class="na">doPrivileged</span><span class="o">(</span><span class="k">new</span> <span class="n">PrivilegedAction</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="n">Object</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+          <span class="n">resource</span><span class="o">.</span><span class="na">write</span><span class="o">();</span>
+          <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="o">}</span>
+      <span class="o">});</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>The users of the resource can invoke regulated writes as follows:</p>
+<div class="codehilite"><pre><span class="c1">// code-base &#39;file:///code/user&#39;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">User</span> <span class="o">{</span>
+  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span> <span class="n">args</span><span class="o">[])</span> <span class="o">{</span>
+    <span class="n">Resource</span> <span class="n">resource</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Resource</span><span class="o">();</span>
+    <span class="n">ResourceWrapper</span> <span class="n">watchfulEyes</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ResourceWrapper</span><span class="o">(</span><span class="n">resource</span><span class="o">);</span>
+    <span class="c1">// can operate directly</span>
+    <span class="n">resource</span><span class="o">.</span><span class="na">read</span><span class="o">();</span> <span class="c1">// we have the permission ourself.</span>
+    <span class="c1">// operate in a sandbox</span>
+    <span class="n">watchfulEyes</span><span class="o">.</span><span class="na">write</span><span class="o">();</span> <span class="c1">// we don&#39;t have the permission ourselves.</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<h4>limiting the permissions</h4>
+<p>Note that when we used the privileged block to enable the wrapper permissions to an untrusted
+invoker, we enabled /all/ of them for the scope of that call. This might be a problem, for example,
+consider the case where our resource was implemented as follows:</p>
+<div class="codehilite"><pre><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Resource</span> <span class="o">{</span>
+  <span class="c1">//...</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">RuntimePermission</span> <span class="n">permission</span> <span class="o">=</span> <span class="k">new</span> <span class="n">RuntimePermission</span><span class="o">(</span><span class="s">&quot;resource.write&quot;</span><span class="o">);</span>
+    <span class="n">AccessController</span><span class="o">.</span><span class="na">checkPermission</span><span class="o">(</span><span class="n">permission</span><span class="o">);</span>
+
+    <span class="k">if</span><span class="o">(!</span><span class="n">existsAlready</span><span class="o">)</span> <span class="c1">// the resource does not exist</span>
+      <span class="n">create</span><span class="o">();</span> <span class="c1">// create it first.</span>
+
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;write&quot;</span><span class="o">);</span> <span class="c1">// do the actual write.</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">create</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">RuntimePermission</span> <span class="n">permission</span> <span class="o">=</span> <span class="k">new</span> <span class="n">RuntimePermission</span><span class="o">(</span><span class="s">&quot;resource.create&quot;</span><span class="o">);</span>
+    <span class="n">AccessController</span><span class="o">.</span><span class="na">checkPermission</span><span class="o">(</span><span class="n">permission</span><span class="o">);</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">&quot;create&quot;</span><span class="o">);</span> <span class="c1">// do the actual &#39;create&#39;.</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</pre></div>
+
+
+<p>In this version, if a write is invoked on a resource which does not exist already, the
+implementation will create it first.  If our intention was only to allow the user code to write to
+existing resources but not to give them the ability to create new ones, our existing wrapper won't
+be able to enforce it. In invoking the privileged call it does not specify how many of its own
+permissions are be to enabled for the user-code, and thus ends up giving the <code>create</code> permission
+too.</p>
+<p>To fix this behavior we need a mechanism to specify a subset of permissions which the trusted
+protection domain wishes to confer for a privileged call and that is achieved by specifying an
+<code>AccessControlContext</code> parameter in the privileged call.  Consider the following updated wrapper
+implementation:</p>
+<div class="codehilite"><pre><span class="c1">// code-base &#39;file:///code/resource&#39;</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">ResourceWrapper</span> <span class="o">{</span>
+  <span class="c1">//...</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">write</span><span class="o">()</span> <span class="o">{</span>
+    <span class="c1">// specify a subset of permission which need to be enabled</span>
+    <span class="n">Permissions</span> <span class="n">subset</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Permissions</span><span class="o">();</span>
+    <span class="n">subset</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">RuntimePermission</span><span class="o">(</span><span class="s">&quot;resource.write&quot;</span><span class="o">));</span>
+    <span class="n">AccessControlContext</span> <span class="n">context</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AccessControlContext</span>
+      <span class="o">({</span> <span class="k">new</span> <span class="n">ProtectionDomain</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span><span class="n">subset</span><span class="o">)</span> <span class="o">});</span>
+    <span class="n">AccessController</span><span class="o">.</span><span class="na">doPrivileged</span><span class="o">(</span><span class="k">new</span> <span class="n">PrivilegedAction</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kd">public</span> <span class="n">Object</span> <span class="nf">run</span><span class="o">()</span> <span class="o">{</span>
+          <span class="n">resource</span><span class="o">.</span><span class="na">write</span><span class="o">();</span>
+          <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="o">}</span>
+      <span class="o">},</span> <span class="n">context</span><span class="o">);</span>
+  <span class="o">}</span>
+</pre></div>
+
+
+<p>Now, the wrapper explicitly specifies that it only wants to enable the write permission for its
+caller. This way, user code which writes to existing resources will work as before but attempts to
+use the wrapper code as short-cut to create new resources would fail.</p>
+<p>That's it.</p>
+<!-- Comments -->
+<div id="feedback" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div style="margin:10px" id="disqus_thread"></div>
+  <div class="modal-footer">
+    <center>
+      <button class="btn btn-large btn-primary" data-keyboard="true" data-dismiss="modal" aria-hidden="true">Dismiss</button>
+    </center>
+  </div>
+</div>
+
+          <center>
+            <footer>
+              <div>
+                <a href="https://github.com/aldrin"><i class="icon-github-alt"></i></a>
+                
+                <a href="/"><i class="icon-home"></i></a>
+                
+                <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a>
+              </div>
+              <small class="muted">&copy; 2013 Aldrin D'Souza</small>
+            </footer>
+          </center>
+        </article>
+      </div>
+    </div>
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-36079748-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    <script src="/theme/js/libs/jquery.min.js"></script>
+    <script src="/theme/js/libs/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'a1drin'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  </body>
+</html>

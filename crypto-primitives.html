@@ -27,6 +27,11 @@
   <li><i class="icon-tag"></i> <a href="./tag/c.html">C++</a></li>
   
   
+  <li class="pull-right hidden-phone">
+    <a href="#feedback" class="link" data-toggle="modal">
+      <i class="icon-comment-alt"></i>
+    </a>
+  </li>
 </ul>
 <p>This page walks through the implementation of an easy-to-use C++ wrapper over the OpenSSL
 <a href="http://www.openssl.org/docs/crypto/crypto.html">crypto library</a>. The idea is to go through the OpenSSL documentation once, make the right
@@ -260,6 +265,15 @@ expected tag value, an exception is raised and the decrypted plaintext <em>must<
 
 <p>That completes the list of primitives we started off with. There's more to be done, in particular,
 some for primitives that use public key cryptography, but I'll leave that for some other day.</p>
+<!-- Comments -->
+<div id="feedback" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div style="margin:10px" id="disqus_thread"></div>
+  <div class="modal-footer">
+    <center>
+      <button class="btn btn-large btn-primary" data-keyboard="true" data-dismiss="modal" aria-hidden="true">Dismiss</button>
+    </center>
+  </div>
+</div>
 
           <center>
             <footer>
@@ -287,5 +301,19 @@ some for primitives that use public key cryptography, but I'll leave that for so
       var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
+    <script src="/theme/js/libs/jquery.min.js"></script>
+    <script src="/theme/js/libs/bootstrap.min.js"></script>
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'a1drin'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
   </body>
 </html>
