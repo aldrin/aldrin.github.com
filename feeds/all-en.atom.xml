@@ -15,17 +15,24 @@ libraries. Here is a &lt;a href="https://github.com/aldrin/home/blob/master/code
 &lt;h4&gt;Data Buffers&lt;/h4&gt;
 &lt;p&gt;Most of the wrapper functions work on blocks of data and we need a way to pass these in and out of
 the wrapper routines. Any C++ container that guarantees contiguous storage (i.e. &lt;code&gt;std::vector&lt;/code&gt;,
-&lt;code&gt;std::string&lt;/code&gt;, &lt;code&gt;std::array&lt;/code&gt;, &lt;code&gt;boost::array&lt;/code&gt; or a POD array) can be passed as the argument to any
-wrapper function that takes a data buffer as a parameter. Internally, the wrapper uses the
-&lt;a href="http://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/buffer.html"&gt;boost::asio::buffer&lt;/a&gt; function to convert these containers to pointer-length pairs which can
-then be passed to the OpenSSL routines.&lt;/p&gt;
-&lt;p&gt;The wrapper defines a convenience typedef for the most commonly used buffer (128 bits)&lt;/p&gt;
+&lt;code&gt;std::string&lt;/code&gt;, &lt;code&gt;std::array&lt;/code&gt;, &lt;code&gt;boost::array&lt;/code&gt; or a raw char array) can be passed as the argument to
+any wrapper function that takes a data buffer as a parameter.&lt;/p&gt;
+&lt;p&gt;Having said that, it is best to avoid using dynamic STL containers for storing sensitive data
+because it is diffcult to scrub them off once we're done using the secrets. The implementations of
+these containers are allowed to reallocate and copy their contents in the memory and may end up with
+inaccessible copies of sensitive data that we can't overwrite. Simpler containers like
+&lt;code&gt;boost::array&lt;/code&gt; or raw char arrays are better for this purpose. You can also use the following typedef:&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="n"&gt;ajd&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="n"&gt;crypto&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
     &lt;span class="c1"&gt;/// A convenience typedef for a 128 bit block.&lt;/span&gt;
     &lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;array&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;block&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="c1"&gt;/// Remove sensitive data from the buffer&lt;/span&gt;
+    &lt;span class="k"&gt;template&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;cleanse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;C&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
+&lt;p&gt;The wrapper also provides a &lt;code&gt;cleanse&lt;/code&gt; method that can be used to overwrite secret data in the
+buffers. This method does not deallocate any memory, it only overwrites the contents of the passed
+buffer by invoking &lt;code&gt;OPENSSL_cleanse&lt;/code&gt; on it.&lt;/p&gt;
 &lt;h4&gt;Secure Random Number Generation&lt;/h4&gt;
 &lt;p&gt;OpenSSL provides a simple interface around the underlying operating system PRNG. This is exposed by
 the wrapper using the following two functions:&lt;/p&gt;
@@ -46,7 +53,7 @@ underlying PRNG.&lt;/p&gt;
   &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;prng_ok&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;          &lt;span class="c1"&gt;// check PRNG state&lt;/span&gt;
 
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;               &lt;span class="c1"&gt;// use the convenience typedef&lt;/span&gt;
-  &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;        &lt;span class="c1"&gt;// fill it with random bytes.&lt;/span&gt;
+  &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;        &lt;span class="c1"&gt;// fill it with random bytes&lt;/span&gt;
   &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1024&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;            &lt;span class="c1"&gt;// use a static POD array&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;           &lt;span class="c1"&gt;// fill it with random bytes&lt;/span&gt;
   &lt;span class="n"&gt;std&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;vector&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;vec&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// use a std::vector&lt;/span&gt;
@@ -76,8 +83,9 @@ application can interact with a human user and prompt for the password.&lt;/p&gt
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                         &lt;span class="c1"&gt;// 128 bit key&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;salt&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                        &lt;span class="c1"&gt;// 128 bit salt&lt;/span&gt;
-  &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;salt&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;                 &lt;span class="c1"&gt;// random salt.&lt;/span&gt;
-  &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;derive_key&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;password&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;salt&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// password derived key.&lt;/span&gt;
+  &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;salt&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;                 &lt;span class="c1"&gt;// random salt&lt;/span&gt;
+  &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;derive_key&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;password&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;salt&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// password derived key&lt;/span&gt;
+  &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;cleanse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;                       &lt;span class="c1"&gt;// clear sensitive data&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -140,6 +148,7 @@ hash computation.&lt;/p&gt;
   &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;update&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hello world!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;     &lt;span class="c1"&gt;// add data&lt;/span&gt;
   &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;update&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;see you world!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;   &lt;span class="c1"&gt;// more data&lt;/span&gt;
   &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;finalize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mac&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;              &lt;span class="c1"&gt;// get the MAC code&lt;/span&gt;
+  &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;cleanse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;          &lt;span class="c1"&gt;// clean senstive data&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -226,6 +235,8 @@ expected tag value, an exception is raised and the decrypted plaintext &lt;em&gt
     &lt;span class="n"&gt;cipher&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;transform&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;ciphertext&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;decrypted&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;  &lt;span class="c1"&gt;// do transform (i.e. decrypt)&lt;/span&gt;
     &lt;span class="n"&gt;cipher&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;verify&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;                          &lt;span class="c1"&gt;// check the seal&lt;/span&gt;
   &lt;span class="p"&gt;}&lt;/span&gt;
+
+  &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;cleanse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;                        &lt;span class="c1"&gt;// clear senstive data&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 

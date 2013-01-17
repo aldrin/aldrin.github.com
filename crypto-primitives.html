@@ -49,17 +49,24 @@ libraries. Here is a <a href="https://github.com/aldrin/home/blob/master/code/c%
 <h4>Data Buffers</h4>
 <p>Most of the wrapper functions work on blocks of data and we need a way to pass these in and out of
 the wrapper routines. Any C++ container that guarantees contiguous storage (i.e. <code>std::vector</code>,
-<code>std::string</code>, <code>std::array</code>, <code>boost::array</code> or a POD array) can be passed as the argument to any
-wrapper function that takes a data buffer as a parameter. Internally, the wrapper uses the
-<a href="http://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/buffer.html">boost::asio::buffer</a> function to convert these containers to pointer-length pairs which can
-then be passed to the OpenSSL routines.</p>
-<p>The wrapper defines a convenience typedef for the most commonly used buffer (128 bits)</p>
+<code>std::string</code>, <code>std::array</code>, <code>boost::array</code> or a raw char array) can be passed as the argument to
+any wrapper function that takes a data buffer as a parameter.</p>
+<p>Having said that, it is best to avoid using dynamic STL containers for storing sensitive data
+because it is diffcult to scrub them off once we're done using the secrets. The implementations of
+these containers are allowed to reallocate and copy their contents in the memory and may end up with
+inaccessible copies of sensitive data that we can't overwrite. Simpler containers like
+<code>boost::array</code> or raw char arrays are better for this purpose. You can also use the following typedef:</p>
 <div class="codehilite"><pre><span class="k">namespace</span> <span class="n">ajd</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">crypto</span> <span class="p">{</span>
     <span class="c1">/// A convenience typedef for a 128 bit block.</span>
     <span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">,</span> <span class="mi">16</span><span class="o">&gt;</span> <span class="n">block</span><span class="p">;</span>
+    <span class="c1">/// Remove sensitive data from the buffer</span>
+    <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">C</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">cleanse</span><span class="p">(</span><span class="n">C</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">)</span>
 </pre></div>
 
 
+<p>The wrapper also provides a <code>cleanse</code> method that can be used to overwrite secret data in the
+buffers. This method does not deallocate any memory, it only overwrites the contents of the passed
+buffer by invoking <code>OPENSSL_cleanse</code> on it.</p>
 <h4>Secure Random Number Generation</h4>
 <p>OpenSSL provides a simple interface around the underlying operating system PRNG. This is exposed by
 the wrapper using the following two functions:</p>
@@ -80,7 +87,7 @@ underlying PRNG.</p>
   <span class="n">assert</span><span class="p">(</span><span class="n">crypto</span><span class="o">::</span><span class="n">prng_ok</span><span class="p">());</span>          <span class="c1">// check PRNG state</span>
 
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">buffer</span><span class="p">;</span>               <span class="c1">// use the convenience typedef</span>
-  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>        <span class="c1">// fill it with random bytes.</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>        <span class="c1">// fill it with random bytes</span>
   <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">arr</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>            <span class="c1">// use a static POD array</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">arr</span><span class="p">);</span>           <span class="c1">// fill it with random bytes</span>
   <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="n">vec</span><span class="p">(</span><span class="mi">16</span><span class="p">);</span> <span class="c1">// use a std::vector</span>
@@ -110,8 +117,9 @@ application can interact with a human user and prompt for the password.</p>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">key</span><span class="p">;</span>                         <span class="c1">// 128 bit key</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">salt</span><span class="p">;</span>                        <span class="c1">// 128 bit salt</span>
-  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">salt</span><span class="p">);</span>                 <span class="c1">// random salt.</span>
-  <span class="n">crypto</span><span class="o">::</span><span class="n">derive_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s">&quot;password&quot;</span><span class="p">,</span> <span class="n">salt</span><span class="p">);</span> <span class="c1">// password derived key.</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">salt</span><span class="p">);</span>                 <span class="c1">// random salt</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">derive_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="s">&quot;password&quot;</span><span class="p">,</span> <span class="n">salt</span><span class="p">);</span> <span class="c1">// password derived key</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">cleanse</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>                       <span class="c1">// clear sensitive data</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -174,6 +182,7 @@ hash computation.</p>
   <span class="n">h</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="s">&quot;hello world!&quot;</span><span class="p">);</span>     <span class="c1">// add data</span>
   <span class="n">h</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="s">&quot;see you world!&quot;</span><span class="p">);</span>   <span class="c1">// more data</span>
   <span class="n">h</span><span class="p">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">mac</span><span class="p">);</span>              <span class="c1">// get the MAC code</span>
+  <span class="n">crypto</span><span class="o">::</span><span class="n">cleanse</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>          <span class="c1">// clean senstive data</span>
 <span class="p">}</span>
 </pre></div>
 
@@ -260,6 +269,8 @@ expected tag value, an exception is raised and the decrypted plaintext <em>must<
     <span class="n">cipher</span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="n">ciphertext</span><span class="p">,</span> <span class="n">decrypted</span><span class="p">);</span>  <span class="c1">// do transform (i.e. decrypt)</span>
     <span class="n">cipher</span><span class="p">.</span><span class="n">verify</span><span class="p">();</span>                          <span class="c1">// check the seal</span>
   <span class="p">}</span>
+
+  <span class="n">crypto</span><span class="o">::</span><span class="n">cleanse</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>                        <span class="c1">// clear senstive data</span>
 </pre></div>
 
 
