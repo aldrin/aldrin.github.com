@@ -1,4 +1,4 @@
 Aldrin's Notebook
 =================
 
-This repo contains my web pages - published at http://a1dr.in
+This repo contains my web pages - published at http://aldrin.co
