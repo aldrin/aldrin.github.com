@@ -5,29 +5,23 @@
     <title>Cryptographic Primitives in C++</title>
     <meta name="author" content="Aldrin D'Souza">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     
-    <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
+         <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
     <link rel="stylesheet" type="text/css" href="/theme/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/theme/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="/theme/css/code.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/ajdweb.css">
   </head>
   <body>
     <div class="container">
       <div class="row">
         <article class="offset1 span10">
-          
-<h1> Cryptographic Primitives in C++ </h1>
+          <h1> Cryptographic Primitives in C++ </h1>
 
 <ul class="breadcrumb">
   <li><i class="icon-calendar"></i> Jan 14, 2013</li>
-  
-  
-  <li><i class="icon-tag"></i> <a href="./tag/security.html">Security</a></li>
-  
-  <li><i class="icon-tag"></i> <a href="./tag/c.html">C++</a></li>
-  
-  
-  <li class="pull-right hidden-phone">
+      <li><i class="icon-tag"></i> <a href="./tag/security.html">Security</a></li>
+    <li><i class="icon-tag"></i> <a href="./tag/c.html">C++</a></li>
+      <li class="pull-right hidden-phone">
     <a href="#feedback" class="link" data-toggle="modal">
       <i class="icon-comment-alt"></i>
     </a>
@@ -71,7 +65,7 @@ buffer by invoking <code>OPENSSL_cleanse</code> on it.</p>
 <p>OpenSSL provides a simple interface around the underlying operating system PRNG. This is exposed by
 the wrapper using the following two functions:</p>
 <div class="codehilite"><pre><span class="c1">/// Checks if the PRNG is sufficiently seeded</span>
-<span class="kt">bool</span> <span class="n">prng_ok</span><span class="p">();</span>
+<span class="kt">bool</span> <span class="nf">prng_ok</span><span class="p">();</span>
 <span class="c1">/// Fills the passed container with random bytes.</span>
 <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">C</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">fill_random</span><span class="p">(</span><span class="n">C</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">);</span>
 </pre></div>
@@ -82,7 +76,7 @@ mutable container with random bytes. In the exceptional situation that <code>prn
 <em>must</em> use use the OpenSSL seed routines <code>RAND_seed</code> and <code>RAND_add</code> directly to add entropy to the
 underlying PRNG.</p>
 <p>Here's how you can use them:</p>
-<div class="codehilite"><pre><span class="kt">void</span> <span class="n">random_generation</span><span class="p">()</span>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">random_generation</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">assert</span><span class="p">(</span><span class="n">crypto</span><span class="o">::</span><span class="n">prng_ok</span><span class="p">());</span>          <span class="c1">// check PRNG state</span>
 
@@ -113,7 +107,7 @@ invocations of this key derivation routine with the same password and salt value
 key bits. This saves us from the hassle of securely storing the secret key assuming that the
 application can interact with a human user and prompt for the password.</p>
 <p>Here's a sample invocation of the key derivation routine:</p>
-<div class="codehilite"><pre><span class="kt">void</span> <span class="n">key_generation</span><span class="p">()</span>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">key_generation</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">key</span><span class="p">;</span>                         <span class="c1">// 128 bit key</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">salt</span><span class="p">;</span>                        <span class="c1">// 128 bit salt</span>
@@ -139,7 +133,7 @@ SHA-256 for MACs.</p>
 <div class="codehilite"><pre><span class="c1">/// Generates a keyed or a plain cryptographic hash.</span>
 <span class="k">class</span> <span class="nc">hash</span><span class="o">:</span> <span class="n">boost</span><span class="o">::</span><span class="n">noncopyable</span>
 <span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
+<span class="nl">public:</span>
   <span class="c1">/// A convenience typedef for a 256 SHA-256 value.</span>
   <span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">,</span> <span class="mi">32</span><span class="o">&gt;</span> <span class="n">value</span><span class="p">;</span>
   <span class="c1">/// The plain hash constructor (for message digests).</span>
@@ -164,7 +158,7 @@ the <code>finalize</code> method. The shorthand typedef <code>hash::value</code>
 <code>finalize</code> method also reinitializes the underlying hash context and resets the instance for a fresh
 hash computation.</p>
 <p>Here's how you can use the class:</p>
-<div class="codehilite"><pre><span class="kt">void</span> <span class="n">message_digest</span><span class="p">()</span>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">message_digest</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">hash</span> <span class="n">md</span><span class="p">;</span>              <span class="c1">// the hash object</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">hash</span><span class="o">::</span><span class="n">value</span> <span class="n">sha</span><span class="p">;</span>      <span class="c1">// the hash value</span>
@@ -173,7 +167,7 @@ hash computation.</p>
   <span class="n">md</span><span class="p">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">sha</span><span class="p">);</span>             <span class="c1">// get digest value</span>
 <span class="p">}</span>
 
-<span class="kt">void</span> <span class="n">message_authentication_code</span><span class="p">()</span>
+<span class="kt">void</span> <span class="nf">message_authentication_code</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">key</span><span class="p">;</span>            <span class="c1">// the hash key</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">key</span><span class="p">);</span>     <span class="c1">// random key will do (for now)</span>
@@ -206,7 +200,7 @@ be modified without the decryption routine noticing it.</p>
 <div class="codehilite"><pre><span class="c1">/// Provides authenticated encryption (AES-128-GCM)</span>
 <span class="k">class</span> <span class="nc">cipher</span> <span class="o">:</span> <span class="n">boost</span><span class="o">::</span><span class="n">noncopyable</span>
 <span class="p">{</span>
-<span class="k">public</span><span class="o">:</span>
+<span class="nl">public:</span>
   <span class="c1">/// Encryption mode constructor.</span>
   <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">K</span><span class="p">,</span> <span class="k">typename</span> <span class="n">I</span><span class="o">&gt;</span>
   <span class="n">cipher</span><span class="p">(</span><span class="k">const</span> <span class="n">K</span> <span class="o">&amp;</span><span class="n">key</span><span class="p">,</span> <span class="k">const</span> <span class="n">I</span> <span class="o">&amp;</span><span class="n">iv</span><span class="p">);</span>
@@ -221,7 +215,7 @@ be modified without the decryption routine noticing it.</p>
   <span class="c1">/// The encryption finalization routine.</span>
   <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">S</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">seal</span><span class="p">(</span><span class="n">S</span> <span class="o">&amp;</span><span class="n">seal</span><span class="p">);</span>
   <span class="c1">/// The decryption finalization routine (throws if the ciphertext is corrupt)</span>
-  <span class="kt">void</span> <span class="n">verify</span><span class="p">();</span>
+  <span class="kt">void</span> <span class="nf">verify</span><span class="p">();</span>
 
   <span class="c1">/// ... details ...</span>
 <span class="p">};</span>
@@ -244,7 +238,7 @@ plaintext, the <code>verify</code> method must be invoked to detect any tamperin
 associated data. If all is well the method silently returns, however if the seal does not match the
 expected tag value, an exception is raised and the decrypted plaintext <em>must</em> be rejected.</p>
 <p>The following sample shows the usage:</p>
-<div class="codehilite"><pre><span class="kt">void</span> <span class="n">authenticated_encrypt_decrypt</span><span class="p">()</span>
+<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">authenticated_encrypt_decrypt</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">iv</span><span class="p">;</span>                           <span class="c1">// initialization vector</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">key</span><span class="p">;</span>                          <span class="c1">// encryption key</span>
@@ -285,15 +279,12 @@ some for primitives that use public key cryptography, but I'll leave that for so
     </center>
   </div>
 </div>
-
           <center>
             <footer>
               <div>
                 <a href="https://github.com/aldrin"><i class="icon-github-alt"></i></a>
-                
-                <a href="/"><i class="icon-home"></i></a>
-                
-                <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a>
+                                <a href="/"><i class="icon-home"></i></a>
+                                <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a>
               </div>
               <small class="muted">&copy; 2013 Aldrin D'Souza</small>
             </footer>

@@ -5,27 +5,22 @@
     <title>Using doPrivileged</title>
     <meta name="author" content="Aldrin D'Souza">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     
-    <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
+         <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
     <link rel="stylesheet" type="text/css" href="/theme/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/theme/css/font-awesome.min.css">
     <link rel="stylesheet" type="text/css" href="/theme/css/code.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/ajdweb.css">
   </head>
   <body>
     <div class="container">
       <div class="row">
         <article class="offset1 span10">
-          
-<h1> Using doPrivileged </h1>
+          <h1> Using doPrivileged </h1>
 
 <ul class="breadcrumb">
   <li><i class="icon-calendar"></i> May 19, 2010</li>
-  
-  
-  <li><i class="icon-tag"></i> <a href="./tag/security.html">Security</a></li>
-  
-  
-  <li class="pull-right hidden-phone">
+      <li><i class="icon-tag"></i> <a href="./tag/security.html">Security</a></li>
+      <li class="pull-right hidden-phone">
     <a href="#feedback" class="link" data-toggle="modal">
       <i class="icon-comment-alt"></i>
     </a>
@@ -58,11 +53,11 @@ actual implementation. This allows us to control access to the operations even i
 resource is used from arbitrary user code. For example, we can implement read-only access to the
 resource by enforcing the following policy (assuming that the resource and user classes belong to
 separate code-bases)</p>
-<div class="codehilite"><pre><span class="n">grant</span> <span class="n">codebase</span> &quot;<span class="n">file</span><span class="p">:</span><span class="o">///</span><span class="n">code</span><span class="o">/</span><span class="n">resource</span>&quot; <span class="p">{</span>
- <span class="n">permission</span> <span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">RuntimePermission</span> &quot;<span class="n">resource</span><span class="p">.</span>####&quot;<span class="p">;</span>
+<div class="codehilite"><pre><span class="n">grant</span> <span class="n">codebase</span> <span class="s">&quot;file:///code/resource&quot;</span> <span class="p">{</span>
+ <span class="n">permission</span> <span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">RuntimePermission</span> <span class="s">&quot;resource.####&quot;</span><span class="p">;</span>
 <span class="p">};</span>
-<span class="n">grant</span> <span class="n">codebase</span> &quot;<span class="n">file</span><span class="p">:</span><span class="o">///</span><span class="n">code</span><span class="o">/</span><span class="n">user</span>&quot; <span class="p">{</span>
- <span class="n">permission</span> <span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">RuntimePermission</span> &quot;<span class="n">resource</span><span class="p">.</span><span class="n">read</span>&quot;<span class="p">;</span>
+<span class="n">grant</span> <span class="n">codebase</span> <span class="s">&quot;file:///code/user&quot;</span> <span class="p">{</span>
+ <span class="n">permission</span> <span class="n">java</span><span class="p">.</span><span class="n">lang</span><span class="p">.</span><span class="n">RuntimePermission</span> <span class="s">&quot;resource.read&quot;</span><span class="p">;</span>
 <span class="p">};</span>
 </pre></div>
 
@@ -201,15 +196,12 @@ use the wrapper code as short-cut to create new resources would fail.</p>
     </center>
   </div>
 </div>
-
           <center>
             <footer>
               <div>
                 <a href="https://github.com/aldrin"><i class="icon-github-alt"></i></a>
-                
-                <a href="/"><i class="icon-home"></i></a>
-                
-                <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a>
+                                <a href="/"><i class="icon-home"></i></a>
+                                <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a>
               </div>
               <small class="muted">&copy; 2013 Aldrin D'Souza</small>
             </footer>

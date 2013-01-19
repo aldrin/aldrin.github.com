@@ -37,7 +37,7 @@ buffer by invoking &lt;code&gt;OPENSSL_cleanse&lt;/code&gt; on it.&lt;/p&gt;
 &lt;p&gt;OpenSSL provides a simple interface around the underlying operating system PRNG. This is exposed by
 the wrapper using the following two functions:&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Checks if the PRNG is sufficiently seeded&lt;/span&gt;
-&lt;span class="kt"&gt;bool&lt;/span&gt; &lt;span class="n"&gt;prng_ok&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="kt"&gt;bool&lt;/span&gt; &lt;span class="nf"&gt;prng_ok&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
 &lt;span class="c1"&gt;/// Fills the passed container with random bytes.&lt;/span&gt;
 &lt;span class="k"&gt;template&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;C&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -48,7 +48,7 @@ mutable container with random bytes. In the exceptional situation that &lt;code&
 &lt;em&gt;must&lt;/em&gt; use use the OpenSSL seed routines &lt;code&gt;RAND_seed&lt;/code&gt; and &lt;code&gt;RAND_add&lt;/code&gt; directly to add entropy to the
 underlying PRNG.&lt;/p&gt;
 &lt;p&gt;Here's how you can use them:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;random_generation&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;random_generation&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;prng_ok&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;          &lt;span class="c1"&gt;// check PRNG state&lt;/span&gt;
 
@@ -79,7 +79,7 @@ invocations of this key derivation routine with the same password and salt value
 key bits. This saves us from the hassle of securely storing the secret key assuming that the
 application can interact with a human user and prompt for the password.&lt;/p&gt;
 &lt;p&gt;Here's a sample invocation of the key derivation routine:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;key_generation&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;key_generation&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                         &lt;span class="c1"&gt;// 128 bit key&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;salt&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                        &lt;span class="c1"&gt;// 128 bit salt&lt;/span&gt;
@@ -105,7 +105,7 @@ SHA-256 for MACs.&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Generates a keyed or a plain cryptographic hash.&lt;/span&gt;
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;hash&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;noncopyable&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
-&lt;span class="k"&gt;public&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+&lt;span class="nl"&gt;public:&lt;/span&gt;
   &lt;span class="c1"&gt;/// A convenience typedef for a 256 SHA-256 value.&lt;/span&gt;
   &lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;array&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;32&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
   &lt;span class="c1"&gt;/// The plain hash constructor (for message digests).&lt;/span&gt;
@@ -130,7 +130,7 @@ the &lt;code&gt;finalize&lt;/code&gt; method. The shorthand typedef &lt;code&gt;
 &lt;code&gt;finalize&lt;/code&gt; method also reinitializes the underlying hash context and resets the instance for a fresh
 hash computation.&lt;/p&gt;
 &lt;p&gt;Here's how you can use the class:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;message_digest&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;message_digest&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;hash&lt;/span&gt; &lt;span class="n"&gt;md&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;              &lt;span class="c1"&gt;// the hash object&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;hash&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;value&lt;/span&gt; &lt;span class="n"&gt;sha&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;      &lt;span class="c1"&gt;// the hash value&lt;/span&gt;
@@ -139,7 +139,7 @@ hash computation.&lt;/p&gt;
   &lt;span class="n"&gt;md&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;finalize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sha&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;             &lt;span class="c1"&gt;// get digest value&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;
 
-&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;message_authentication_code&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;message_authentication_code&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;            &lt;span class="c1"&gt;// the hash key&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;     &lt;span class="c1"&gt;// random key will do (for now)&lt;/span&gt;
@@ -172,7 +172,7 @@ be modified without the decryption routine noticing it.&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Provides authenticated encryption (AES-128-GCM)&lt;/span&gt;
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;cipher&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;noncopyable&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
-&lt;span class="k"&gt;public&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+&lt;span class="nl"&gt;public:&lt;/span&gt;
   &lt;span class="c1"&gt;/// Encryption mode constructor.&lt;/span&gt;
   &lt;span class="k"&gt;template&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;K&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
   &lt;span class="n"&gt;cipher&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;K&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;I&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;iv&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
@@ -187,7 +187,7 @@ be modified without the decryption routine noticing it.&lt;/p&gt;
   &lt;span class="c1"&gt;/// The encryption finalization routine.&lt;/span&gt;
   &lt;span class="k"&gt;template&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;S&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;seal&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;S&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;seal&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
   &lt;span class="c1"&gt;/// The decryption finalization routine (throws if the ciphertext is corrupt)&lt;/span&gt;
-  &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;verify&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+  &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;verify&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
 
   &lt;span class="c1"&gt;/// ... details ...&lt;/span&gt;
 &lt;span class="p"&gt;};&lt;/span&gt;
@@ -210,7 +210,7 @@ plaintext, the &lt;code&gt;verify&lt;/code&gt; method must be invoked to detect 
 associated data. If all is well the method silently returns, however if the seal does not match the
 expected tag value, an exception is raised and the decrypted plaintext &lt;em&gt;must&lt;/em&gt; be rejected.&lt;/p&gt;
 &lt;p&gt;The following sample shows the usage:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;authenticated_encrypt_decrypt&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;authenticated_encrypt_decrypt&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;iv&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                           &lt;span class="c1"&gt;// initialization vector&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                          &lt;span class="c1"&gt;// encryption key&lt;/span&gt;
@@ -268,11 +268,11 @@ actual implementation. This allows us to control access to the operations even i
 resource is used from arbitrary user code. For example, we can implement read-only access to the
 resource by enforcing the following policy (assuming that the resource and user classes belong to
 separate code-bases)&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="n"&gt;grant&lt;/span&gt; &lt;span class="n"&gt;codebase&lt;/span&gt; &amp;quot;&lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;///&lt;/span&gt;&lt;span class="n"&gt;code&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;resource&lt;/span&gt;&amp;quot; &lt;span class="p"&gt;{&lt;/span&gt;
- &lt;span class="n"&gt;permission&lt;/span&gt; &lt;span class="n"&gt;java&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lang&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;RuntimePermission&lt;/span&gt; &amp;quot;&lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;####&amp;quot;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="n"&gt;grant&lt;/span&gt; &lt;span class="n"&gt;codebase&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;file:///code/resource&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+ &lt;span class="n"&gt;permission&lt;/span&gt; &lt;span class="n"&gt;java&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lang&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;RuntimePermission&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;resource.####&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="p"&gt;};&lt;/span&gt;
-&lt;span class="n"&gt;grant&lt;/span&gt; &lt;span class="n"&gt;codebase&lt;/span&gt; &amp;quot;&lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;///&lt;/span&gt;&lt;span class="n"&gt;code&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;user&lt;/span&gt;&amp;quot; &lt;span class="p"&gt;{&lt;/span&gt;
- &lt;span class="n"&gt;permission&lt;/span&gt; &lt;span class="n"&gt;java&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lang&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;RuntimePermission&lt;/span&gt; &amp;quot;&lt;span class="n"&gt;resource&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;read&lt;/span&gt;&amp;quot;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="n"&gt;grant&lt;/span&gt; &lt;span class="n"&gt;codebase&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;file:///code/user&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+ &lt;span class="n"&gt;permission&lt;/span&gt; &lt;span class="n"&gt;java&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;lang&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;RuntimePermission&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;resource.read&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="p"&gt;};&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
