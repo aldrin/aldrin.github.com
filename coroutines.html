@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Coroutines in C++ (incomplete...)</title>
+    <meta name="author" content="Aldrin D'Souza">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="WgWezQUyzDnfImQwdhZtLV7Sx8VBOgt9vCnOqgbhF7s"/>
+         <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.0/css/font-awesome.css" rel="stylesheet">
+    <link href="//fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet" type="text/css">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.0/css/font-awesome-ie7.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/theme/css/code.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/ajdweb.css">
+    <!--
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});</script>
+        <script type='text/javascript' src='http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
+        -->
+  </head>
+  <body>
+    <div class="container ">
+      <div class="row">
+        <article class="offset1 span10">
+          <h1> Coroutines in C++ (incomplete...) </h1>
+
+<ul class="breadcrumb">
+  <li><i class="icon-calendar"></i>Mar 08, 2013</li>
+      <li><i class="icon-tag"></i><a href="./tag/c.html">C++</a></li>
+    <li><i class="icon-tag"></i><a href="./tag/boost.html">Boost</a></li>
+      <li class="pull-right hidden-phone">
+    <i class="icon-comment"></i>
+    <a href="#feedback" data-toggle="modal">Comments?</a>
+  </li>
+</ul>
+<p>The ideal subroutine is a mathematical function; you give it inputs and it returns the results of
+the computation. It has a single entry point, all data local to it is initialized upon entry and is
+cleaned up when it returns back to the caller. The next call, if any, starts all over again and no
+local residues are carried over from the last time. A coroutine is an interesting deviation from
+these well set conventions. Unlike a subroutine, a coroutine is not required to be atomic; it can
+<em>yield</em> control back to the caller as soon as there are partial results that can be used. Moreover,
+it can <em>resume</em> the computation from where it left when the invoked again.</p>
+<p>These yield-resume semantics make coroutines a better abstraction for certain problems. In the
+following, I walk through some such problems and implement their solutions using
+<a href="http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html">Boost.Coroutine</a>. Let's start with <a href="http://www.python.org/dev/peps/pep-0255/">generators</a>.</p>
+<h4>Generators</h4>
+<p>Consider the problem of writing a routine that checks if two binary trees have the <em>same fringe</em>
+i.e.  if they have exactly the same leaves reading from left to right. For example, the blue trees
+below all have the same fringe while none of them have the same fringe as the red one.</p>
+<p><img src="/static/images/samefringe.png"></p>
+<p>How would we write a routine that takes two <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/misc/tree.h">binary trees</a> and checks if they have the same
+fringe?</p>
+<p>Simple, check if the post-order traversals of the two trees are the same. That works but is
+suboptimal as it requires us to access <em>all</em> leaf nodes in both the trees, always. Looking at all
+nodes is <em>necessary</em> before returning a <code>true</code> but we should be able to return <code>false</code> sooner. For
+example, given the red and any of the blue trees from above, we can return a <code>false</code> after looking
+at just the first node from the two trees. To do that we would have to compare the trees one leaf at
+a time. The routine would have to descend down to the first leaf and yield control back to the
+caller with the leaf value. The caller would then compare the values of two leaves received and
+return <code>false</code> if they don't match or return control back to the routines to resume their
+traversals.  Pause a little while here and consider writing a subroutine that can do this.</p>
+<p>The example, though academic, gives us insight that a coroutine based generator is better when it
+makes sense to return partial results early and resume the remaining computation only if
+needed. <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/boost/coro_samefringe.cpp">Here's</a> how we do that for the problem above:</p>
+<div class="codehilite"><pre><span class="cp">#include &lt;misc/tree.h&gt;</span>
+<span class="cp">#include &lt;boost/bind.hpp&gt;</span>
+<span class="cp">#include &lt;boost/coroutine/all.hpp&gt;</span>
+
+<span class="k">typedef</span> <span class="n">ajd</span><span class="o">::</span><span class="n">binary_tree</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">tree</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">coroutines</span><span class="o">::</span><span class="n">coroutine</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">()</span><span class="o">&gt;</span> <span class="n">generator</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">next_leaf</span><span class="p">(</span><span class="n">generator</span><span class="o">::</span><span class="n">caller_type</span> <span class="o">&amp;</span><span class="n">caller</span><span class="p">,</span> <span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="o">&amp;</span><span class="n">node</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">node</span><span class="p">)</span>
+  <span class="p">{</span>
+    <span class="n">next_leaf</span><span class="p">(</span><span class="n">caller</span><span class="p">,</span> <span class="n">node</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
+    <span class="n">next_leaf</span><span class="p">(</span><span class="n">caller</span><span class="p">,</span> <span class="n">node</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">is_leaf</span><span class="p">(</span><span class="n">node</span><span class="p">))</span> <span class="p">{</span> <span class="n">caller</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">);</span> <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">bool</span> <span class="nf">same_fringe</span><span class="p">(</span><span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">one</span><span class="p">,</span> <span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">two</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">generator</span> <span class="n">leaf1</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="n">next_leaf</span><span class="p">,</span> <span class="n">_1</span><span class="p">,</span> <span class="n">one</span><span class="p">));</span>
+  <span class="n">generator</span> <span class="n">leaf2</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="n">next_leaf</span><span class="p">,</span> <span class="n">_1</span><span class="p">,</span> <span class="n">two</span><span class="p">));</span>
+
+  <span class="k">while</span> <span class="p">(</span><span class="n">leaf1</span> <span class="o">||</span> <span class="n">leaf2</span><span class="p">)</span> <span class="c1">// while one of the trees has a next leaf</span>
+  <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">leaf1</span> <span class="o">&amp;&amp;</span> <span class="n">leaf2</span><span class="p">)</span>  <span class="c1">// if both have a next leaf</span>
+    <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">leaf1</span><span class="p">.</span><span class="n">get</span><span class="p">()</span> <span class="o">!=</span> <span class="n">leaf2</span><span class="p">.</span><span class="n">get</span><span class="p">())</span> <span class="c1">// compare the next leaf</span>
+      <span class="p">{</span>
+        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span> <span class="c1">// next leaves don&#39;t match. return false.</span>
+      <span class="p">}</span>
+      <span class="n">leaf1</span><span class="p">();</span> <span class="c1">// advance the first tree traversal</span>
+      <span class="n">leaf2</span><span class="p">();</span> <span class="c1">// advance the second tree traversal</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="c1">// one tree has more leaves than the other.</span>
+    <span class="p">{</span>
+      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span> <span class="c1">// leaf count mismatch. return false.</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nb">true</span><span class="p">;</span> <span class="c1">// no mismatches found, return true.</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>If you were (as I was) hoping that syntax would be as neat as it is for Python generators, it
+isn't. The first thing to get used to is that the <em>logical coroutine</em> we want to write is different
+from the <em>actual function</em> we have to write (i.e. <code>next_leaf</code>.) The second is to realize that
+coroutines work in pairs; they don't <em>return</em> back to their caller, instead, they <em>call</em> the caller
+back.</p>
+<p>With these two things in mind, consider the routine <code>same_fringe</code>. The first thing we do is create
+two instances of type <code>generator</code> each bound to one of the roots of the trees we're comparing.  The
+<code>generator</code> type is an instantiation of the <code>boost::coroutines::coroutine</code> template class with the
+<em>logical</em> signature of the coroutine plugged in. Here, this logical signature is <code>char()</code> because
+the routine is expected to return <code>char</code> values stored in the tree leaves.</p>
+<p>Next, remember that the coroutine will not <em>return</em> these leaf values like a subroutines would,
+instead, it will call another coroutine that represents the caller. A reference to this peer
+coroutine is passed as the first argument to <code>next_leaf</code>. The actual type of this first argument is
+<code>boost::coroutines::coroutine&lt;void(char)</code> and the same is also available as the convenience typedef
+<code>generator::caller_type</code>. Think about it and it'll make sense.</p>
+<p>The rest of the comparison logic is implemented using three member functions of the
+<code>boost::coroutines::coroutines</code> class. The first is the conversion to <code>bool</code> that allows us to check
+if the coroutine is active (it stays active till <code>next_leaf</code> ends). The second is a function call
+operator that resumes a coroutine execution. So <code>leaf1()</code> in <code>same_fringe</code> resumes <code>next_leaf</code> and
+executes its code till it yields back by calling its caller. Note that <code>caller(node-&gt;value)</code> inside
+<code>next_leaf</code> does exactly the same thing, i.e. resumes the execution of <code>same_fringe</code>. The last
+method used is <code>get</code> that is an accessor for the result computed by the last invocation of the
+coroutine. The return type here is <code>char</code> and we use it to compare the leaf nodes.</p>
+<p>Hopefully, that made sense.</p>
+<h4>Incomplete</h4>
+<p>This post is incomplete. Have more samples</p>
+<!-- Comments -->
+<div id="feedback" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div id="disqus_thread"></div>
+  <div class="modal-footer">
+    <center>
+      <button class="btn btn-large btn-primary" data-keyboard="true" data-dismiss="modal" aria-hidden="true">Dismiss</button>
+    </center>
+  </div>
+</div>
+          <center>
+            <footer>
+              <div>
+                <a href="https://github.com/aldrin"><i class="icon-github-alt"></i></a>
+                                <a href="/"><i class="icon-home"></i></a>
+                                <!-- <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a> -->
+              </div>
+              <small class="muted">&copy; 2013 Aldrin D'Souza</small>
+            </footer>
+          </center>
+        </article>
+      </div>
+    </div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script> 
+    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-37780098-1']);
+      _gaq.push(['_trackPageview']);
+      
+      (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    <script type="text/javascript">
+      /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+      var disqus_shortname = 'a1drin'; // required: replace example with your forum shortname
+
+      /* * * DON'T EDIT BELOW THIS LINE * * */
+      (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+  </body>
+</html>

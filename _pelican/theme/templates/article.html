@@ -1,21 +1,18 @@
 {% extends "base.html" %}
-
 {% block title %}{{ article.title }}{% endblock %}
-
 {% block content %}
 <h1> {{ article.title }} </h1>
 
 <ul class="breadcrumb">
-  <li><i class="icon-calendar"></i> {{article.locale_date}}</li>
+  <li><i class="icon-calendar"></i>{{article.locale_date}}</li>
   {% if article.tags %}
   {% for tag in article.tags %}
-  <li><i class="icon-tag"></i> <a href="{{ SITEURL }}/{{ tag.url }}">{{ tag }}</a></li>
+  <li><i class="icon-tag"></i><a href="{{ SITEURL }}/{{ tag.url }}">{{ tag }}</a></li>
   {% endfor %}
   {% endif %}
   <li class="pull-right hidden-phone">
-    <a href="#feedback" class="link" data-toggle="modal">
-      <i class="icon-comment-alt"></i>
-    </a>
+    <i class="icon-comment"></i>
+    <a href="#feedback" data-toggle="modal">Comments?</a>
   </li>
 </ul>
 {{ article.content }}

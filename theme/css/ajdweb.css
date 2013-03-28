@@ -1,8 +1,18 @@
-body { font-family: 'Droid Sans', sans-serif; }
-
-#disqus_thread { margin:10px; }
-
-.listing {
+body 
+{ 
+    font-family: 'Droid Sans', sans-serif; 
+}
+#disqus_thread 
+{
+    margin:10px; 
+}
+.modal 
+{
+    max-height: 90%;
+    overflow-y: auto;
+}
+.listing 
+{
     margin: 20px 0 20px;
     padding: 0;
     background-color: #fff;
@@ -13,23 +23,27 @@ body { font-family: 'Droid Sans', sans-serif; }
     -moz-box-shadow: 0 1px 4px rgba(0,0,0,.065);
     box-shadow: 0 1px 4px rgba(0,0,0,.065);
 }
-.listing > li > a {
+.listing > li > a 
+{
     display: block;
     margin: 0 0 -1px;
     padding: 8px 0 8px;
     border: 1px solid #e5e5e5;
 }
-.listing > li:first-child > a {
+.listing > li:first-child > a 
+{
     -webkit-border-radius: 6px 6px 0 0;
     -moz-border-radius: 6px 6px 0 0;
     border-radius: 6px 6px 0 0;
 }
-.listing > li:last-child > a {
+.listing > li:last-child > a 
+{
     -webkit-border-radius: 0 0 6px 6px;
     -moz-border-radius: 0 0 6px 6px;
     border-radius: 0 0 6px 6px;
 }
-.listing > .active > a {
+.listing > .active > a 
+{
     position: relative;
     z-index: 2;
     padding: 9px 15px;
