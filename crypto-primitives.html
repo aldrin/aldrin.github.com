@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Cryptographic Primitives in C++</title>
+    <title>Cryptographic Primitives in&nbsp;C++</title>
     <meta name="author" content="Aldrin D'Souza">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="WgWezQUyzDnfImQwdhZtLV7Sx8VBOgt9vCnOqgbhF7s"/>
@@ -22,7 +22,7 @@
     <div class="container ">
       <div class="row">
         <article class="offset1 span10">
-          <h1> Cryptographic Primitives in C++ </h1>
+          <h1> Cryptographic Primitives in&nbsp;C++ </h1>
 
 <ul class="breadcrumb">
   <li><i class="icon-calendar"></i>Jan 14, 2013</li>
@@ -36,26 +36,26 @@
 <p>This page walks through the implementation of an easy-to-use C++ wrapper over the OpenSSL
 <a href="http://www.openssl.org/docs/crypto/crypto.html">crypto library</a>. The idea is to go through the OpenSSL documentation once, make the right
 choices from a cryptographic point of view, and then, hide all the complexity behind a reusable
-header. The following primitives are typically used in the applications I write:</p>
+header. The following primitives are typically used in the applications I&nbsp;write:</p>
 <ul>
-<li>Random Number Generation</li>
-<li>Password Based Symmetric Key Generation (PBKDF2/HMAC-SHA-256)</li>
-<li>Message Digests and Authentication Codes (SHA-256 &amp; HMAC-SHA-256)</li>
-<li>Authenticated Encryption with Associated Data (AES-128-GCM)</li>
+<li>Random Number&nbsp;Generation</li>
+<li>Password Based Symmetric Key Generation&nbsp;(<span class="caps">PBKDF2</span>/<span class="caps">HMAC</span>-<span class="caps">SHA</span>-256)</li>
+<li>Message Digests and Authentication Codes (<span class="caps">SHA</span>-256 <span class="amp">&amp;</span>&nbsp;<span class="caps">HMAC</span>-<span class="caps">SHA</span>-256)</li>
+<li>Authenticated Encryption with Associated Data&nbsp;(<span class="caps">AES</span>-128-<span class="caps">GCM</span>)</li>
 </ul>
 <p>The wrapper is a <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/crypto.h">single header file</a> that can be included wherever these primitives are
 needed. It includes OpenSSL and Boost headers and will require linking with the OpenSSL object
 libraries. Here is a <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/crypto.cpp">sample</a> and here are the <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/vectors.cpp">tests</a>. </p>
-<h4>Data Buffers</h4>
+<h4>Data&nbsp;Buffers</h4>
 <p>Most of the wrapper functions work on blocks of data and we need a way to pass these in and out of
 the wrapper routines. Any C++ container that guarantees contiguous storage (i.e. <code>std::vector</code>,
 <code>std::string</code>, <code>std::array</code>, <code>boost::array</code> or a raw char array) can be passed as the argument to
-any wrapper function that takes a data buffer as a parameter.</p>
-<p>Having said that, it is best to avoid using dynamic STL containers for storing sensitive data
-because it is diffcult to scrub them off once we're done using the secrets. The implementations of
+any wrapper function that takes a data buffer as a&nbsp;parameter.</p>
+<p>Having said that, it is best to avoid using dynamic <span class="caps">STL</span> containers for storing sensitive data
+because it is diffcult to scrub them off once we&#8217;re done using the secrets. The implementations of
 these containers are allowed to reallocate and copy their contents in the memory and may end up with
-inaccessible copies of sensitive data that we can't overwrite. Simpler containers like
-<code>boost::array</code> or raw char arrays are better for this purpose. You can also use the following typedef:</p>
+inaccessible copies of sensitive data that we can&#8217;t overwrite. Simpler containers like
+<code>boost::array</code> or raw char arrays are better for this purpose. You can also use the following&nbsp;typedef:</p>
 <div class="codehilite"><pre><span class="k">namespace</span> <span class="n">ajd</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">crypto</span> <span class="p">{</span>
     <span class="c1">/// A convenience typedef for a 128 bit block.</span>
     <span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">,</span> <span class="mi">16</span><span class="o">&gt;</span> <span class="n">block</span><span class="p">;</span>
@@ -66,29 +66,29 @@ inaccessible copies of sensitive data that we can't overwrite. Simpler container
 
 <p>The wrapper also provides a <code>cleanse</code> method that can be used to overwrite secret data in the
 buffers. This method does not deallocate any memory, it only overwrites the contents of the passed
-buffer by invoking <code>OPENSSL_cleanse</code> on it.</p>
-<h4>Secure Random Number Generation</h4>
-<p>OpenSSL provides a simple interface around the underlying operating system PRNG. This is exposed by
-the wrapper using the following two functions:</p>
-<div class="codehilite"><pre><span class="c1">/// Checks if the PRNG is sufficiently seeded</span>
+buffer by invoking <code>OPENSSL_cleanse</code> on&nbsp;it.</p>
+<h4>Secure Random Number&nbsp;Generation</h4>
+<p>OpenSSL provides a simple interface around the underlying operating system <span class="caps">PRNG</span>. This is exposed by
+the wrapper using the following two&nbsp;functions:</p>
+<div class="codehilite"><pre><span class="c1">/// Checks if the <span class="caps">PRNG</span> is sufficiently seeded</span>
 <span class="kt">bool</span> <span class="nf">prng_ok</span><span class="p">();</span>
 <span class="c1">/// Fills the passed container with random bytes.</span>
 <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">C</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">fill_random</span><span class="p">(</span><span class="n">C</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">);</span>
 </pre></div>
 
 
-<p><code>prng_ok</code> checks if the PRNG has been seeded sufficiently and <code>fill_random</code> routine fills any
+<p><code>prng_ok</code> checks if the <span class="caps">PRNG</span> has been seeded sufficiently and <code>fill_random</code> routine fills any
 mutable container with random bytes. In the exceptional situation that <code>prng_ok</code> returns false you
 <em>must</em> use use the OpenSSL seed routines <code>RAND_seed</code> and <code>RAND_add</code> directly to add entropy to the
-underlying PRNG.</p>
-<p>Here's how you can use them:</p>
+underlying&nbsp;<span class="caps">PRNG</span>.</p>
+<p>Here&#8217;s how you can use&nbsp;them:</p>
 <div class="codehilite"><pre><span class="kt">void</span> <span class="nf">random_generation</span><span class="p">()</span>
 <span class="p">{</span>
-  <span class="n">assert</span><span class="p">(</span><span class="n">crypto</span><span class="o">::</span><span class="n">prng_ok</span><span class="p">());</span>          <span class="c1">// check PRNG state</span>
+  <span class="n">assert</span><span class="p">(</span><span class="n">crypto</span><span class="o">::</span><span class="n">prng_ok</span><span class="p">());</span>          <span class="c1">// check <span class="caps">PRNG</span> state</span>
 
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">buffer</span><span class="p">;</span>               <span class="c1">// use the convenience typedef</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>        <span class="c1">// fill it with random bytes</span>
-  <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">arr</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>            <span class="c1">// use a static POD array</span>
+  <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">arr</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>            <span class="c1">// use a static <span class="caps">POD</span> array</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">arr</span><span class="p">);</span>           <span class="c1">// fill it with random bytes</span>
   <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="o">&gt;</span> <span class="n">vec</span><span class="p">(</span><span class="mi">16</span><span class="p">);</span> <span class="c1">// use a std::vector</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">fill_random</span><span class="p">(</span><span class="n">vec</span><span class="p">);</span>           <span class="c1">// fill it with random bytes</span>
@@ -96,13 +96,13 @@ underlying PRNG.</p>
 </pre></div>
 
 
-<h4>Password Based Symmetric Key Generation</h4>
+<h4>Password Based Symmetric Key&nbsp;Generation</h4>
 <p>Symmetric ciphers require secure keys and one way to generate them is using the <code>fill_random</code>
-routine seen above. More commonly however, we'd want to derive the key bits from a user provided
-password. The standard way to do this is using the <a href="http://tools.ietf.org/html/rfc2898">PBKDF2</a> algorithm which derives the key
+routine seen above. More commonly however, we&#8217;d want to derive the key bits from a user provided
+password. The standard way to do this is using the <a href="http://tools.ietf.org/html/rfc2898"><span class="caps">PBKDF2</span></a> algorithm which derives the key
 bits by iterating over a pseudo random function with the password and a salt as inputs. The wrapper
-sets HMAC-SHA-256 as the chosen pseudo random function and uses a default iteration count of 10000.</p>
-<div class="codehilite"><pre><span class="c1">/// Derive a key using PBKDF2-HMAC-SHA-256</span>
+sets <span class="caps">HMAC</span>-<span class="caps">SHA</span>-256 as the chosen pseudo random function and uses a default iteration count of&nbsp;10000.</p>
+<div class="codehilite"><pre><span class="c1">/// Derive a key using <span class="caps">PBKDF2</span>-<span class="caps">HMAC</span>-<span class="caps">SHA</span>-256</span>
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">C1</span><span class="p">,</span> <span class="k">typename</span> <span class="n">C2</span><span class="p">,</span> <span class="k">typename</span> <span class="n">C3</span><span class="o">&gt;</span>
 <span class="kt">void</span> <span class="n">derive_key</span><span class="p">(</span><span class="n">C3</span> <span class="o">&amp;</span><span class="n">key</span><span class="p">,</span> <span class="k">const</span> <span class="n">C1</span> <span class="o">&amp;</span><span class="n">passwd</span><span class="p">,</span> <span class="k">const</span> <span class="n">C2</span> <span class="o">&amp;</span><span class="n">salt</span><span class="p">,</span> <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">)</span>
 </pre></div>
@@ -111,8 +111,8 @@ sets HMAC-SHA-256 as the chosen pseudo random function and uses a default iterat
 <p>The salt can be any public value that will be persisted between application runs. Repeated
 invocations of this key derivation routine with the same password and salt value produce the same
 key bits. This saves us from the hassle of securely storing the secret key assuming that the
-application can interact with a human user and prompt for the password.</p>
-<p>Here's a sample invocation of the key derivation routine:</p>
+application can interact with a human user and prompt for the&nbsp;password.</p>
+<p>Here&#8217;s a sample invocation of the key derivation&nbsp;routine:</p>
 <div class="codehilite"><pre><span class="kt">void</span> <span class="nf">key_generation</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">key</span><span class="p">;</span>                         <span class="c1">// 128 bit key</span>
@@ -124,23 +124,23 @@ application can interact with a human user and prompt for the password.</p>
 </pre></div>
 
 
-<h4>Message Digests and Message Authentication Codes</h4>
+<h4>Message Digests and Message Authentication&nbsp;Codes</h4>
 <p>Cryptographic hashes are compression functions that <em>digest</em> an arbitrary sized message into a small
 fingerprint that uniquely represents it. Although they are the building blocks for implementing
 integrity checks, a hash, by itself, cannot guarantee integrity. An adversary capable of modifying
 the message is also capable of recomputing the hash of the modified message to send along. For an
 additional guarantee on the origin we need a stronger primitive which is the message authentication
-code (MAC). A MAC is a keyed-hash, i.e. a hash that can only be generated by those who posses an
+code (<span class="caps">MAC</span>). A <span class="caps">MAC</span> is a keyed-hash, i.e. a hash that can only be generated by those who posses an
 assumed shared key. The assumption of secrecy of the key limits the possible origins and thus
-provides us the guarantee that an adversary couldn't have generated it.</p>
-<p>MD5 should not be used and SHA-1 hashes are considered weak and unsuitable for all new
-applications. The wrapper uses <a href="http://csrc.nist.gov/groups/ST/toolkit/secure_hashing.html">SHA-256</a> for generating plain digests and <a href="http://tools.ietf.org/html/rfc2104">HMAC</a> with
-SHA-256 for MACs.</p>
+provides us the guarantee that an adversary couldn&#8217;t have generated&nbsp;it.</p>
+<p><span class="caps">MD5</span> should not be used and <span class="caps">SHA</span>-1 hashes are considered weak and unsuitable for all new
+applications. The wrapper uses <a href="http://csrc.nist.gov/groups/ST/toolkit/secure_hashing.html"><span class="caps">SHA</span>-256</a> for generating plain digests and <a href="http://tools.ietf.org/html/rfc2104"><span class="caps">HMAC</span></a> with
+<span class="caps">SHA</span>-256 for&nbsp;MACs.</p>
 <div class="codehilite"><pre><span class="c1">/// Generates a keyed or a plain cryptographic hash.</span>
 <span class="k">class</span> <span class="nc">hash</span><span class="o">:</span> <span class="n">boost</span><span class="o">::</span><span class="n">noncopyable</span>
 <span class="p">{</span>
 <span class="nl">public:</span>
-  <span class="c1">/// A convenience typedef for a 256 SHA-256 value.</span>
+  <span class="c1">/// A convenience typedef for a 256 <span class="caps">SHA</span>-256 value.</span>
   <span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">,</span> <span class="mi">32</span><span class="o">&gt;</span> <span class="n">value</span><span class="p">;</span>
   <span class="c1">/// The plain hash constructor (for message digests).</span>
   <span class="n">hash</span><span class="p">();</span>
@@ -159,11 +159,11 @@ SHA-256 for MACs.</p>
 <p>The default constructor of the class initializes the instance for message digests. The other
 constructor takes a key as input and initializes the instance for message authentication codes. Once
 initialized, the data to be hashed can be added by invoking the <code>update</code> method (multiple times, if
-required). The resulting hash or MAC is a SHA-256 hash (a 256 bit value) that can be extracted using
+required). The resulting hash or <span class="caps">MAC</span> is a <span class="caps">SHA</span>-256 hash (a 256 bit value) that can be extracted using
 the <code>finalize</code> method. The shorthand typedef <code>hash::value</code> can be used to hold the result. The
 <code>finalize</code> method also reinitializes the underlying hash context and resets the instance for a fresh
-hash computation.</p>
-<p>Here's how you can use the class:</p>
+hash&nbsp;computation.</p>
+<p>Here&#8217;s how you can use the&nbsp;class:</p>
 <div class="codehilite"><pre><span class="kt">void</span> <span class="nf">message_digest</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">hash</span> <span class="n">md</span><span class="p">;</span>              <span class="c1">// the hash object</span>
@@ -181,29 +181,29 @@ hash computation.</p>
   <span class="n">crypto</span><span class="o">::</span><span class="n">hash</span><span class="o">::</span><span class="n">value</span> <span class="n">mac</span><span class="p">;</span>      <span class="c1">// the mac value</span>
   <span class="n">h</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="s">&quot;hello world!&quot;</span><span class="p">);</span>     <span class="c1">// add data</span>
   <span class="n">h</span><span class="p">.</span><span class="n">update</span><span class="p">(</span><span class="s">&quot;see you world!&quot;</span><span class="p">);</span>   <span class="c1">// more data</span>
-  <span class="n">h</span><span class="p">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">mac</span><span class="p">);</span>              <span class="c1">// get the MAC code</span>
+  <span class="n">h</span><span class="p">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">mac</span><span class="p">);</span>              <span class="c1">// get the <span class="caps">MAC</span> code</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">cleanse</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>          <span class="c1">// clean senstive data</span>
 <span class="p">}</span>
 </pre></div>
 
 
-<h4>Authenticated Encryption with Associated Data</h4>
+<h4>Authenticated Encryption with Associated&nbsp;Data</h4>
 <p>Encryption guarantees confidentiality and <a href="http://csrc.nist.gov/groups/ST/toolkit/BCM/modes_development.html#01">authenticated encryption</a> extends that guarantee to guard
-against tampering of encrypted data. Operation modes like CBC or CTR cannot detect modifications to
+against tampering of encrypted data. Operation modes like <span class="caps">CBC</span> or <span class="caps">CTR</span> cannot detect modifications to
 the ciphertext and decrypt tweaked data as they would decrypt any other ciphertext. An adversary can
 use this fact to make calibrated modifications to the ciphertext and end up with the desired
 plaintext in the decrypted data. The recommended way to guard against such attacks is to use an
-authenticated encryption mode like the <a href="http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf">Galois Counter Mode</a> (GCM).</p>
+authenticated encryption mode like the <a href="http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf">Galois Counter Mode</a>&nbsp;(<span class="caps">GCM</span>).</p>
 <p>Authenticated encryption schemes differ from the simpler schemes in that they produce an extra
 output along with the cipher text. This extra output is an authentication tag that is required as an
-input at the time of decryption where it is used to detect modifications in the ciphertext.</p>
+input at the time of decryption where it is used to detect modifications in the&nbsp;ciphertext.</p>
 <p>Another feature of authenticated encryption is their support for associated data. Network protocol
-messages include data (ex: header fields in packets) that doesn't need to be encrypted but must be
+messages include data (ex: header fields in packets) that doesn&#8217;t need to be encrypted but must be
 guarded against modifications in transit. Authenticated encryption schemes allow the addition of
 such data into the tag computation. So while the adversary can view this data in transit, it cannot
-be modified without the decryption routine noticing it.</p>
-<p>The following class provides authenticated encryption with associated data:</p>
-<div class="codehilite"><pre><span class="c1">/// Provides authenticated encryption (AES-128-GCM)</span>
+be modified without the decryption routine noticing&nbsp;it.</p>
+<p>The following class provides authenticated encryption with associated&nbsp;data:</p>
+<div class="codehilite"><pre><span class="c1">/// Provides authenticated encryption (<span class="caps">AES</span>-128-<span class="caps">GCM</span>)</span>
 <span class="k">class</span> <span class="nc">cipher</span> <span class="o">:</span> <span class="n">boost</span><span class="o">::</span><span class="n">noncopyable</span>
 <span class="p">{</span>
 <span class="nl">public:</span>
@@ -230,20 +230,20 @@ be modified without the decryption routine noticing it.</p>
 
 <p>The <code>crypto::cipher</code> class has two constructors. The 2 argument variant takes a key and an
 initialization vector (128 bits each) and initializes the instance for encryption. Plaintext can be
-transformed into ciphertext using the <code>transform</code> method. The GCM mode does not use any padding so
-the output ciphertext buffer must be as big as the input plaintext buffer. If there's any associated
+transformed into ciphertext using the <code>transform</code> method. The <span class="caps">GCM</span> mode does not use any padding so
+the output ciphertext buffer must be as big as the input plaintext buffer. If there&#8217;s any associated
 data that needs to be sent along with the ciphertext it can be added using the <code>associate_data</code>
-method. Note that the OpenSSL implementation of GCM requires that associated data is added <em>before</em>
+method. Note that the OpenSSL implementation of <span class="caps">GCM</span> requires that associated data is added <em>before</em>
 the plaintext is added (i.e. all calls to <code>associate_data</code> must precede all calls to <code>transform</code>.)
 Once all the data has been added, the <code>seal</code> method must be invoked to obtain the authentication tag
-(128 bits) and it must be sent along with the ciphertext.</p>
-<p>The 3 argument constructor takes a key, an IV and the encryption seal as inputs and initializes the
+(128 bits) and it must be sent along with the&nbsp;ciphertext.</p>
+<p>The 3 argument constructor takes a key, an <span class="caps">IV</span> and the encryption seal as inputs and initializes the
 instance for decryption. Ciphertext can then be transformed to plaintext using the <code>transform</code>
 method (after adding any associated data using the <code>associate_data</code> method). Before using the
 plaintext, the <code>verify</code> method must be invoked to detect any tampering in the ciphertext or
 associated data. If all is well the method silently returns, however if the seal does not match the
-expected tag value, an exception is raised and the decrypted plaintext <em>must</em> be rejected.</p>
-<p>The following sample shows the usage:</p>
+expected tag value, an exception is raised and the decrypted plaintext <em>must</em> be&nbsp;rejected.</p>
+<p>The following sample shows the&nbsp;usage:</p>
 <div class="codehilite"><pre><span class="kt">void</span> <span class="nf">authenticated_encrypt_decrypt</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">iv</span><span class="p">;</span>                           <span class="c1">// initialization vector</span>
@@ -274,8 +274,8 @@ expected tag value, an exception is raised and the decrypted plaintext <em>must<
 </pre></div>
 
 
-<p>That completes the list of primitives we started off with. There's more to be done, in particular,
-some for primitives that use public key cryptography, but I'll leave that for some other day.</p>
+<p>That completes the list of primitives we started off with. There&#8217;s more to be done, in particular,
+some for primitives that use public key cryptography, but I&#8217;ll leave that for some other&nbsp;day.</p>
 <!-- Comments -->
 <div id="feedback" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div id="disqus_thread"></div>
@@ -288,7 +288,7 @@ some for primitives that use public key cryptography, but I'll leave that for so
           <center>
             <footer>
               <div>
-                <a href="https://github.com/aldrin"><i class="icon-github-alt"></i></a>
+                <a href="https://github.com/aldrin/home"><i class="icon-github-alt"></i></a>
                                 <a href="/"><i class="icon-home"></i></a>
                                 <!-- <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a> -->
               </div>

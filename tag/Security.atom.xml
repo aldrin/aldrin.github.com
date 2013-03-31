@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Aldrin's Notebook</title><link href="http://aldrin.co/" rel="alternate"></link><link href="http://aldrin.co/tag/Security.atom.xml" rel="self"></link><id>http://aldrin.co/</id><updated>2013-01-14T00:00:00+05:30</updated><entry><title>Cryptographic Primitives in C++</title><link href="http://aldrin.co/crypto-primitives.html" rel="alternate"></link><updated>2013-01-14T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-01-14:crypto-primitives.html</id><summary type="html">&lt;p&gt;This page walks through the implementation of an easy-to-use C++ wrapper over the OpenSSL
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Aldrin's Notebook</title><link href="http://aldrin.co/" rel="alternate"></link><link href="http://aldrin.co/tag/Security.atom.xml" rel="self"></link><id>http://aldrin.co/</id><updated>2013-01-14T00:00:00+05:30</updated><entry><title>Cryptographic Primitives in C++</title><link href="http://aldrin.co/crypto-primitives.html" rel="alternate"></link><updated>2013-01-14T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-01-14:crypto-primitives.html</id><summary type="html">&lt;p&gt;This page walks through the implementation of an easy-to-use C++ wrapper over the OpenSSL
 &lt;a href="http://www.openssl.org/docs/crypto/crypto.html"&gt;crypto library&lt;/a&gt;. The idea is to go through the OpenSSL documentation once, make the right
 choices from a cryptographic point of view, and then, hide all the complexity behind a reusable
-header. The following primitives are typically used in the applications I write:&lt;/p&gt;
+header. The following primitives are typically used in the applications I&amp;nbsp;write:&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;Random Number Generation&lt;/li&gt;
-&lt;li&gt;Password Based Symmetric Key Generation (PBKDF2/HMAC-SHA-256)&lt;/li&gt;
-&lt;li&gt;Message Digests and Authentication Codes (SHA-256 &amp;amp; HMAC-SHA-256)&lt;/li&gt;
-&lt;li&gt;Authenticated Encryption with Associated Data (AES-128-GCM)&lt;/li&gt;
+&lt;li&gt;Random Number&amp;nbsp;Generation&lt;/li&gt;
+&lt;li&gt;Password Based Symmetric Key Generation&amp;nbsp;(&lt;span class="caps"&gt;PBKDF2&lt;/span&gt;/&lt;span class="caps"&gt;HMAC&lt;/span&gt;-&lt;span class="caps"&gt;SHA&lt;/span&gt;-256)&lt;/li&gt;
+&lt;li&gt;Message Digests and Authentication Codes (&lt;span class="caps"&gt;SHA&lt;/span&gt;-256 &lt;span class="amp"&gt;&amp;amp;&lt;/span&gt;&amp;nbsp;&lt;span class="caps"&gt;HMAC&lt;/span&gt;-&lt;span class="caps"&gt;SHA&lt;/span&gt;-256)&lt;/li&gt;
+&lt;li&gt;Authenticated Encryption with Associated Data&amp;nbsp;(&lt;span class="caps"&gt;AES&lt;/span&gt;-128-&lt;span class="caps"&gt;GCM&lt;/span&gt;)&lt;/li&gt;
 &lt;/ul&gt;
 &lt;p&gt;The wrapper is a &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/crypto.h"&gt;single header file&lt;/a&gt; that can be included wherever these primitives are
 needed. It includes OpenSSL and Boost headers and will require linking with the OpenSSL object
 libraries. Here is a &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/crypto.cpp"&gt;sample&lt;/a&gt; and here are the &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/vectors.cpp"&gt;tests&lt;/a&gt;. &lt;/p&gt;
-&lt;h4&gt;Data Buffers&lt;/h4&gt;
+&lt;h4&gt;Data&amp;nbsp;Buffers&lt;/h4&gt;
 &lt;p&gt;Most of the wrapper functions work on blocks of data and we need a way to pass these in and out of
 the wrapper routines. Any C++ container that guarantees contiguous storage (i.e. &lt;code&gt;std::vector&lt;/code&gt;,
 &lt;code&gt;std::string&lt;/code&gt;, &lt;code&gt;std::array&lt;/code&gt;, &lt;code&gt;boost::array&lt;/code&gt; or a raw char array) can be passed as the argument to
-any wrapper function that takes a data buffer as a parameter.&lt;/p&gt;
-&lt;p&gt;Having said that, it is best to avoid using dynamic STL containers for storing sensitive data
-because it is diffcult to scrub them off once we're done using the secrets. The implementations of
+any wrapper function that takes a data buffer as a&amp;nbsp;parameter.&lt;/p&gt;
+&lt;p&gt;Having said that, it is best to avoid using dynamic &lt;span class="caps"&gt;STL&lt;/span&gt; containers for storing sensitive data
+because it is diffcult to scrub them off once we&amp;#8217;re done using the secrets. The implementations of
 these containers are allowed to reallocate and copy their contents in the memory and may end up with
-inaccessible copies of sensitive data that we can't overwrite. Simpler containers like
-&lt;code&gt;boost::array&lt;/code&gt; or raw char arrays are better for this purpose. You can also use the following typedef:&lt;/p&gt;
+inaccessible copies of sensitive data that we can&amp;#8217;t overwrite. Simpler containers like
+&lt;code&gt;boost::array&lt;/code&gt; or raw char arrays are better for this purpose. You can also use the following&amp;nbsp;typedef:&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="n"&gt;ajd&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="n"&gt;crypto&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
     &lt;span class="c1"&gt;/// A convenience typedef for a 128 bit block.&lt;/span&gt;
     &lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;array&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;block&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
@@ -32,29 +32,29 @@ inaccessible copies of sensitive data that we can't overwrite. Simpler container
 
 &lt;p&gt;The wrapper also provides a &lt;code&gt;cleanse&lt;/code&gt; method that can be used to overwrite secret data in the
 buffers. This method does not deallocate any memory, it only overwrites the contents of the passed
-buffer by invoking &lt;code&gt;OPENSSL_cleanse&lt;/code&gt; on it.&lt;/p&gt;
-&lt;h4&gt;Secure Random Number Generation&lt;/h4&gt;
-&lt;p&gt;OpenSSL provides a simple interface around the underlying operating system PRNG. This is exposed by
-the wrapper using the following two functions:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Checks if the PRNG is sufficiently seeded&lt;/span&gt;
+buffer by invoking &lt;code&gt;OPENSSL_cleanse&lt;/code&gt; on&amp;nbsp;it.&lt;/p&gt;
+&lt;h4&gt;Secure Random Number&amp;nbsp;Generation&lt;/h4&gt;
+&lt;p&gt;OpenSSL provides a simple interface around the underlying operating system &lt;span class="caps"&gt;PRNG&lt;/span&gt;. This is exposed by
+the wrapper using the following two&amp;nbsp;functions:&lt;/p&gt;
+&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Checks if the &lt;span class="caps"&gt;PRNG&lt;/span&gt; is sufficiently seeded&lt;/span&gt;
 &lt;span class="kt"&gt;bool&lt;/span&gt; &lt;span class="nf"&gt;prng_ok&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
 &lt;span class="c1"&gt;/// Fills the passed container with random bytes.&lt;/span&gt;
 &lt;span class="k"&gt;template&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;C&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;code&gt;prng_ok&lt;/code&gt; checks if the PRNG has been seeded sufficiently and &lt;code&gt;fill_random&lt;/code&gt; routine fills any
+&lt;p&gt;&lt;code&gt;prng_ok&lt;/code&gt; checks if the &lt;span class="caps"&gt;PRNG&lt;/span&gt; has been seeded sufficiently and &lt;code&gt;fill_random&lt;/code&gt; routine fills any
 mutable container with random bytes. In the exceptional situation that &lt;code&gt;prng_ok&lt;/code&gt; returns false you
 &lt;em&gt;must&lt;/em&gt; use use the OpenSSL seed routines &lt;code&gt;RAND_seed&lt;/code&gt; and &lt;code&gt;RAND_add&lt;/code&gt; directly to add entropy to the
-underlying PRNG.&lt;/p&gt;
-&lt;p&gt;Here's how you can use them:&lt;/p&gt;
+underlying&amp;nbsp;&lt;span class="caps"&gt;PRNG&lt;/span&gt;.&lt;/p&gt;
+&lt;p&gt;Here&amp;#8217;s how you can use&amp;nbsp;them:&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;random_generation&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
-  &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;prng_ok&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;          &lt;span class="c1"&gt;// check PRNG state&lt;/span&gt;
+  &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;prng_ok&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;          &lt;span class="c1"&gt;// check &lt;span class="caps"&gt;PRNG&lt;/span&gt; state&lt;/span&gt;
 
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;               &lt;span class="c1"&gt;// use the convenience typedef&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;buffer&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;        &lt;span class="c1"&gt;// fill it with random bytes&lt;/span&gt;
-  &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1024&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;            &lt;span class="c1"&gt;// use a static POD array&lt;/span&gt;
+  &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1024&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;            &lt;span class="c1"&gt;// use a static &lt;span class="caps"&gt;POD&lt;/span&gt; array&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;arr&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;           &lt;span class="c1"&gt;// fill it with random bytes&lt;/span&gt;
   &lt;span class="n"&gt;std&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;vector&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;vec&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// use a std::vector&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;vec&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;           &lt;span class="c1"&gt;// fill it with random bytes&lt;/span&gt;
@@ -62,13 +62,13 @@ underlying PRNG.&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h4&gt;Password Based Symmetric Key Generation&lt;/h4&gt;
+&lt;h4&gt;Password Based Symmetric Key&amp;nbsp;Generation&lt;/h4&gt;
 &lt;p&gt;Symmetric ciphers require secure keys and one way to generate them is using the &lt;code&gt;fill_random&lt;/code&gt;
-routine seen above. More commonly however, we'd want to derive the key bits from a user provided
-password. The standard way to do this is using the &lt;a href="http://tools.ietf.org/html/rfc2898"&gt;PBKDF2&lt;/a&gt; algorithm which derives the key
+routine seen above. More commonly however, we&amp;#8217;d want to derive the key bits from a user provided
+password. The standard way to do this is using the &lt;a href="http://tools.ietf.org/html/rfc2898"&gt;&lt;span class="caps"&gt;PBKDF2&lt;/span&gt;&lt;/a&gt; algorithm which derives the key
 bits by iterating over a pseudo random function with the password and a salt as inputs. The wrapper
-sets HMAC-SHA-256 as the chosen pseudo random function and uses a default iteration count of 10000.&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Derive a key using PBKDF2-HMAC-SHA-256&lt;/span&gt;
+sets &lt;span class="caps"&gt;HMAC&lt;/span&gt;-&lt;span class="caps"&gt;SHA&lt;/span&gt;-256 as the chosen pseudo random function and uses a default iteration count of&amp;nbsp;10000.&lt;/p&gt;
+&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Derive a key using &lt;span class="caps"&gt;PBKDF2&lt;/span&gt;-&lt;span class="caps"&gt;HMAC&lt;/span&gt;-&lt;span class="caps"&gt;SHA&lt;/span&gt;-256&lt;/span&gt;
 &lt;span class="k"&gt;template&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;C1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;C2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;C3&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
 &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;derive_key&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;C3&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;C1&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;passwd&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;C2&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;salt&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;10000&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -77,8 +77,8 @@ sets HMAC-SHA-256 as the chosen pseudo random function and uses a default iterat
 &lt;p&gt;The salt can be any public value that will be persisted between application runs. Repeated
 invocations of this key derivation routine with the same password and salt value produce the same
 key bits. This saves us from the hassle of securely storing the secret key assuming that the
-application can interact with a human user and prompt for the password.&lt;/p&gt;
-&lt;p&gt;Here's a sample invocation of the key derivation routine:&lt;/p&gt;
+application can interact with a human user and prompt for the&amp;nbsp;password.&lt;/p&gt;
+&lt;p&gt;Here&amp;#8217;s a sample invocation of the key derivation&amp;nbsp;routine:&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;key_generation&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                         &lt;span class="c1"&gt;// 128 bit key&lt;/span&gt;
@@ -90,23 +90,23 @@ application can interact with a human user and prompt for the password.&lt;/p&gt
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h4&gt;Message Digests and Message Authentication Codes&lt;/h4&gt;
+&lt;h4&gt;Message Digests and Message Authentication&amp;nbsp;Codes&lt;/h4&gt;
 &lt;p&gt;Cryptographic hashes are compression functions that &lt;em&gt;digest&lt;/em&gt; an arbitrary sized message into a small
 fingerprint that uniquely represents it. Although they are the building blocks for implementing
 integrity checks, a hash, by itself, cannot guarantee integrity. An adversary capable of modifying
 the message is also capable of recomputing the hash of the modified message to send along. For an
 additional guarantee on the origin we need a stronger primitive which is the message authentication
-code (MAC). A MAC is a keyed-hash, i.e. a hash that can only be generated by those who posses an
+code (&lt;span class="caps"&gt;MAC&lt;/span&gt;). A &lt;span class="caps"&gt;MAC&lt;/span&gt; is a keyed-hash, i.e. a hash that can only be generated by those who posses an
 assumed shared key. The assumption of secrecy of the key limits the possible origins and thus
-provides us the guarantee that an adversary couldn't have generated it.&lt;/p&gt;
-&lt;p&gt;MD5 should not be used and SHA-1 hashes are considered weak and unsuitable for all new
-applications. The wrapper uses &lt;a href="http://csrc.nist.gov/groups/ST/toolkit/secure_hashing.html"&gt;SHA-256&lt;/a&gt; for generating plain digests and &lt;a href="http://tools.ietf.org/html/rfc2104"&gt;HMAC&lt;/a&gt; with
-SHA-256 for MACs.&lt;/p&gt;
+provides us the guarantee that an adversary couldn&amp;#8217;t have generated&amp;nbsp;it.&lt;/p&gt;
+&lt;p&gt;&lt;span class="caps"&gt;MD5&lt;/span&gt; should not be used and &lt;span class="caps"&gt;SHA&lt;/span&gt;-1 hashes are considered weak and unsuitable for all new
+applications. The wrapper uses &lt;a href="http://csrc.nist.gov/groups/ST/toolkit/secure_hashing.html"&gt;&lt;span class="caps"&gt;SHA&lt;/span&gt;-256&lt;/a&gt; for generating plain digests and &lt;a href="http://tools.ietf.org/html/rfc2104"&gt;&lt;span class="caps"&gt;HMAC&lt;/span&gt;&lt;/a&gt; with
+&lt;span class="caps"&gt;SHA&lt;/span&gt;-256 for&amp;nbsp;MACs.&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Generates a keyed or a plain cryptographic hash.&lt;/span&gt;
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;hash&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;noncopyable&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
 &lt;span class="nl"&gt;public:&lt;/span&gt;
-  &lt;span class="c1"&gt;/// A convenience typedef for a 256 SHA-256 value.&lt;/span&gt;
+  &lt;span class="c1"&gt;/// A convenience typedef for a 256 &lt;span class="caps"&gt;SHA&lt;/span&gt;-256 value.&lt;/span&gt;
   &lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;array&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;32&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
   &lt;span class="c1"&gt;/// The plain hash constructor (for message digests).&lt;/span&gt;
   &lt;span class="n"&gt;hash&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
@@ -125,11 +125,11 @@ SHA-256 for MACs.&lt;/p&gt;
 &lt;p&gt;The default constructor of the class initializes the instance for message digests. The other
 constructor takes a key as input and initializes the instance for message authentication codes. Once
 initialized, the data to be hashed can be added by invoking the &lt;code&gt;update&lt;/code&gt; method (multiple times, if
-required). The resulting hash or MAC is a SHA-256 hash (a 256 bit value) that can be extracted using
+required). The resulting hash or &lt;span class="caps"&gt;MAC&lt;/span&gt; is a &lt;span class="caps"&gt;SHA&lt;/span&gt;-256 hash (a 256 bit value) that can be extracted using
 the &lt;code&gt;finalize&lt;/code&gt; method. The shorthand typedef &lt;code&gt;hash::value&lt;/code&gt; can be used to hold the result. The
 &lt;code&gt;finalize&lt;/code&gt; method also reinitializes the underlying hash context and resets the instance for a fresh
-hash computation.&lt;/p&gt;
-&lt;p&gt;Here's how you can use the class:&lt;/p&gt;
+hash&amp;nbsp;computation.&lt;/p&gt;
+&lt;p&gt;Here&amp;#8217;s how you can use the&amp;nbsp;class:&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;message_digest&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;hash&lt;/span&gt; &lt;span class="n"&gt;md&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;              &lt;span class="c1"&gt;// the hash object&lt;/span&gt;
@@ -147,29 +147,29 @@ hash computation.&lt;/p&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;hash&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;value&lt;/span&gt; &lt;span class="n"&gt;mac&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;      &lt;span class="c1"&gt;// the mac value&lt;/span&gt;
   &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;update&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;hello world!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;     &lt;span class="c1"&gt;// add data&lt;/span&gt;
   &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;update&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;see you world!&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;   &lt;span class="c1"&gt;// more data&lt;/span&gt;
-  &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;finalize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mac&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;              &lt;span class="c1"&gt;// get the MAC code&lt;/span&gt;
+  &lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;finalize&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;mac&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;              &lt;span class="c1"&gt;// get the &lt;span class="caps"&gt;MAC&lt;/span&gt; code&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;cleanse&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;          &lt;span class="c1"&gt;// clean senstive data&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h4&gt;Authenticated Encryption with Associated Data&lt;/h4&gt;
+&lt;h4&gt;Authenticated Encryption with Associated&amp;nbsp;Data&lt;/h4&gt;
 &lt;p&gt;Encryption guarantees confidentiality and &lt;a href="http://csrc.nist.gov/groups/ST/toolkit/BCM/modes_development.html#01"&gt;authenticated encryption&lt;/a&gt; extends that guarantee to guard
-against tampering of encrypted data. Operation modes like CBC or CTR cannot detect modifications to
+against tampering of encrypted data. Operation modes like &lt;span class="caps"&gt;CBC&lt;/span&gt; or &lt;span class="caps"&gt;CTR&lt;/span&gt; cannot detect modifications to
 the ciphertext and decrypt tweaked data as they would decrypt any other ciphertext. An adversary can
 use this fact to make calibrated modifications to the ciphertext and end up with the desired
 plaintext in the decrypted data. The recommended way to guard against such attacks is to use an
-authenticated encryption mode like the &lt;a href="http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf"&gt;Galois Counter Mode&lt;/a&gt; (GCM).&lt;/p&gt;
+authenticated encryption mode like the &lt;a href="http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf"&gt;Galois Counter Mode&lt;/a&gt;&amp;nbsp;(&lt;span class="caps"&gt;GCM&lt;/span&gt;).&lt;/p&gt;
 &lt;p&gt;Authenticated encryption schemes differ from the simpler schemes in that they produce an extra
 output along with the cipher text. This extra output is an authentication tag that is required as an
-input at the time of decryption where it is used to detect modifications in the ciphertext.&lt;/p&gt;
+input at the time of decryption where it is used to detect modifications in the&amp;nbsp;ciphertext.&lt;/p&gt;
 &lt;p&gt;Another feature of authenticated encryption is their support for associated data. Network protocol
-messages include data (ex: header fields in packets) that doesn't need to be encrypted but must be
+messages include data (ex: header fields in packets) that doesn&amp;#8217;t need to be encrypted but must be
 guarded against modifications in transit. Authenticated encryption schemes allow the addition of
 such data into the tag computation. So while the adversary can view this data in transit, it cannot
-be modified without the decryption routine noticing it.&lt;/p&gt;
-&lt;p&gt;The following class provides authenticated encryption with associated data:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Provides authenticated encryption (AES-128-GCM)&lt;/span&gt;
+be modified without the decryption routine noticing&amp;nbsp;it.&lt;/p&gt;
+&lt;p&gt;The following class provides authenticated encryption with associated&amp;nbsp;data:&lt;/p&gt;
+&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Provides authenticated encryption (&lt;span class="caps"&gt;AES&lt;/span&gt;-128-&lt;span class="caps"&gt;GCM&lt;/span&gt;)&lt;/span&gt;
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;cipher&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;noncopyable&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
 &lt;span class="nl"&gt;public:&lt;/span&gt;
@@ -196,20 +196,20 @@ be modified without the decryption routine noticing it.&lt;/p&gt;
 
 &lt;p&gt;The &lt;code&gt;crypto::cipher&lt;/code&gt; class has two constructors. The 2 argument variant takes a key and an
 initialization vector (128 bits each) and initializes the instance for encryption. Plaintext can be
-transformed into ciphertext using the &lt;code&gt;transform&lt;/code&gt; method. The GCM mode does not use any padding so
-the output ciphertext buffer must be as big as the input plaintext buffer. If there's any associated
+transformed into ciphertext using the &lt;code&gt;transform&lt;/code&gt; method. The &lt;span class="caps"&gt;GCM&lt;/span&gt; mode does not use any padding so
+the output ciphertext buffer must be as big as the input plaintext buffer. If there&amp;#8217;s any associated
 data that needs to be sent along with the ciphertext it can be added using the &lt;code&gt;associate_data&lt;/code&gt;
-method. Note that the OpenSSL implementation of GCM requires that associated data is added &lt;em&gt;before&lt;/em&gt;
+method. Note that the OpenSSL implementation of &lt;span class="caps"&gt;GCM&lt;/span&gt; requires that associated data is added &lt;em&gt;before&lt;/em&gt;
 the plaintext is added (i.e. all calls to &lt;code&gt;associate_data&lt;/code&gt; must precede all calls to &lt;code&gt;transform&lt;/code&gt;.)
 Once all the data has been added, the &lt;code&gt;seal&lt;/code&gt; method must be invoked to obtain the authentication tag
-(128 bits) and it must be sent along with the ciphertext.&lt;/p&gt;
-&lt;p&gt;The 3 argument constructor takes a key, an IV and the encryption seal as inputs and initializes the
+(128 bits) and it must be sent along with the&amp;nbsp;ciphertext.&lt;/p&gt;
+&lt;p&gt;The 3 argument constructor takes a key, an &lt;span class="caps"&gt;IV&lt;/span&gt; and the encryption seal as inputs and initializes the
 instance for decryption. Ciphertext can then be transformed to plaintext using the &lt;code&gt;transform&lt;/code&gt;
 method (after adding any associated data using the &lt;code&gt;associate_data&lt;/code&gt; method). Before using the
 plaintext, the &lt;code&gt;verify&lt;/code&gt; method must be invoked to detect any tampering in the ciphertext or
 associated data. If all is well the method silently returns, however if the seal does not match the
-expected tag value, an exception is raised and the decrypted plaintext &lt;em&gt;must&lt;/em&gt; be rejected.&lt;/p&gt;
-&lt;p&gt;The following sample shows the usage:&lt;/p&gt;
+expected tag value, an exception is raised and the decrypted plaintext &lt;em&gt;must&lt;/em&gt; be&amp;nbsp;rejected.&lt;/p&gt;
+&lt;p&gt;The following sample shows the&amp;nbsp;usage:&lt;/p&gt;
 &lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;authenticated_encrypt_decrypt&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;iv&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                           &lt;span class="c1"&gt;// initialization vector&lt;/span&gt;
@@ -240,5 +240,5 @@ expected tag value, an exception is raised and the decrypted plaintext &lt;em&gt
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;That completes the list of primitives we started off with. There's more to be done, in particular,
-some for primitives that use public key cryptography, but I'll leave that for some other day.&lt;/p&gt;</summary><category term="Security"></category><category term="C++"></category></entry></feed>
+&lt;p&gt;That completes the list of primitives we started off with. There&amp;#8217;s more to be done, in particular,
+some for primitives that use public key cryptography, but I&amp;#8217;ll leave that for some other&amp;nbsp;day.&lt;/p&gt;</summary><category term="Security"></category><category term="C++"></category></entry></feed>

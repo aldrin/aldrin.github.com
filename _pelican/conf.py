@@ -4,6 +4,7 @@ MARKUP = 'md'
 THEME = 'theme'
 DEFAULT_LANG = 'en'
 STATIC_PATHS = ['images']
+TYPOGRIFY = True
 TIMEZONE = 'Asia/Calcutta'
 AUTHOR = u"Aldrin J D'Souza"
 SITEURL = u'http://aldrin.co'
