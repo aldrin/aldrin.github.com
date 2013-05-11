@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-MARKUP = 'md'
+MARKUP = (('rst', 'md'))
 THEME = 'theme'
 DEFAULT_LANG = 'en'
 STATIC_PATHS = ['images']
