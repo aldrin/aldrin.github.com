@@ -1,5 +1,148 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Aldrin's Notebook</title><link href="http://aldrin.co/" rel="alternate"></link><link href="http://aldrin.co/feeds/all-en.atom.xml" rel="self"></link><id>http://aldrin.co/</id><updated>2013-01-14T00:00:00+05:30</updated><entry><title>Cryptographic Primitives in C++</title><link href="http://aldrin.co/crypto-primitives.html" rel="alternate"></link><updated>2013-01-14T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-01-14:crypto-primitives.html</id><summary type="html">&lt;p&gt;This page walks through the implementation of an easy-to-use C++ wrapper over the OpenSSL
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Aldrin's Notebook</title><link href="http://aldrin.co/" rel="alternate"></link><link href="http://aldrin.co/feeds/all-en.atom.xml" rel="self"></link><id>http://aldrin.co/</id><updated>2013-03-08T00:00:00+05:30</updated><entry><title>A Boost.Coroutine Primer</title><link href="http://aldrin.co/coroutine-basics.html" rel="alternate"></link><updated>2013-03-08T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-03-08:coroutine-basics.html</id><summary type="html">&lt;p&gt;An ideal subroutine is a mathematical function; it takes inputs and returns the results of its
+computation. It has a single entry point and all data local to it is initialized upon entry and
+cleaned up when it returns to the caller. The next call, if any, starts all over again and no local
+residues are carried over from the last invocation. A coroutine is an interesting deviation from
+these conventions. It can &lt;em&gt;yield&lt;/em&gt; control back to the caller as soon as there are partial results
+that can be put to use. Moreover, when invoked again, it can &lt;em&gt;resume&lt;/em&gt; the computation from where it
+left. These &lt;em&gt;yield/resume&lt;/em&gt; semantics make coroutines a better unit of structuring programs for
+certain types of&amp;nbsp;problems.&lt;/p&gt;
+&lt;p&gt;This page is an introduction to writing coroutines in C++ using the &lt;a href="http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html"&gt;Boost.Coroutine&lt;/a&gt;&amp;nbsp;library.&lt;/p&gt;
+&lt;h4&gt;Python&amp;nbsp;xrange&lt;/h4&gt;
+&lt;p&gt;Consider writing the Python built-in function &lt;a href="http://docs.python.org/2/library/functions.html#xrange"&gt;&lt;code&gt;xrange&lt;/code&gt;&lt;/a&gt; which takes a number n returns a
+sequence of numbers from 0 to n &lt;em&gt;without actually storing them all simulatenously&lt;/em&gt;. An &lt;em&gt;ideal&lt;/em&gt;
+subroutine cannot do this and we&amp;#8217;d need either a functor that holds state between invocations or a
+coroutine. &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/xrange.cpp"&gt;Here&amp;#8217;s&lt;/a&gt; the&amp;nbsp;latter:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;boost/bind.hpp&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;boost/coroutine/coroutine.hpp&amp;gt;&lt;/span&gt;
+
+&lt;span class="c1"&gt;// The coroutine type.&lt;/span&gt;
+&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;coroutines&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;coroutine&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;coro&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="c1"&gt;// The implementation routine of the coroutine.&lt;/span&gt;
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;xrange_impl&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;coro&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;caller_type&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;yield&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;limit&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt; &lt;span class="n"&gt;limit&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;++&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;yield&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// return results back to the caller&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="c1"&gt;// Construct the coroutine instance&lt;/span&gt;
+  &lt;span class="n"&gt;coro&lt;/span&gt; &lt;span class="n"&gt;xrange&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;bind&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;xrange_impl&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;_1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;10000&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+
+  &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;sum&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+  &lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;xrange&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// Check completion status&lt;/span&gt;
+    &lt;span class="n"&gt;sum&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;xrange&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// Extract yielded result&lt;/span&gt;
+    &lt;span class="n"&gt;xrange&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// Fire it again.&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sum&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="mi"&gt;49995000&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here&amp;#8217;s a (not so) quick walkthrough of the&amp;nbsp;code:&lt;/p&gt;
+&lt;p&gt;We start by defining our coroutine type by instantiating the &lt;code&gt;boost::coroutines::coroutine&lt;/code&gt; template
+class with the logical signature of the generator. This logical signature, here, is &lt;code&gt;int()&lt;/code&gt; because
+our coroutine is expected to generate integers. The complete type (which we typedef as &lt;code&gt;coro&lt;/code&gt; to
+save us some typing) is thus: &lt;code&gt;boost::coroutines::coroutine&amp;lt;int()&amp;gt;&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Next, we provide the implementation of the coroutine as the &lt;code&gt;xrange_impl&lt;/code&gt; function. This function is
+meant to be invoked repeatedly and is expected to yield the next number in the sequence back to its
+caller. Remember that coroutines operate in pairs, i.e. a coroutine (unlike a subroutine) does not
+&lt;em&gt;return&lt;/em&gt; a value back to its caller, instead, it &lt;em&gt;calls&lt;/em&gt; the caller back with the result and the
+first parameter that the implementation routine takes is a reference to that&amp;nbsp;callable.&lt;/p&gt;
+&lt;p&gt;This callable is actually the &lt;em&gt;inverse&lt;/em&gt; coroutine (a.k.a. the calling coroutine.) For the xrange
+example, where we&amp;#8217;re writing a coroutine that generates integer values, the inverse coroutine is one
+that &lt;em&gt;consumes&lt;/em&gt; integer values, i.e. &lt;code&gt;boost::coroutines::coroutine&amp;lt;void(int)&amp;gt;&lt;/code&gt;. We don&amp;#8217;t need to
+compute the inverse type manually, because the coroutine type conveniently provides it as a member
+typedef &lt;code&gt;caller_type&lt;/code&gt;. The implementation routine can take other parameters (like &lt;code&gt;limit&lt;/code&gt;) but those
+must be bound to their values at the time of the coroutine construction like we do in &lt;code&gt;main&lt;/code&gt;. It is
+also possible for the coroutine itself to require values &lt;em&gt;per invocation&lt;/em&gt; but let&amp;#8217;s leave that aside
+for a&amp;nbsp;while.&lt;/p&gt;
+&lt;p&gt;Next, with the coroutine instance ready, we iterate over it to extract values it yields. These
+values can be extracted using the &lt;code&gt;xrange.get()&lt;/code&gt; function (its return type is the return type of the
+logical signature of the coroutine, i.e. &lt;code&gt;int&lt;/code&gt;) and completion can be checked using the implicit
+bool conversion operator. The next invocation can be triggered by invoking the function call
+operator (it takes the same parameters as the logical&amp;nbsp;signature.)&lt;/p&gt;
+&lt;p&gt;That does it for xrange. Hopefully, my confused rambling made sense. Let&amp;#8217;s take on a slightly more
+complicated&amp;nbsp;generator.&lt;/p&gt;
+&lt;h4&gt;Same&amp;nbsp;Fringe&lt;/h4&gt;
+&lt;p&gt;Consider the problem of writing a routine that checks if two binary trees have the
+&lt;a href="http://c2.com/cgi/wiki?SameFringeProblem"&gt;same fringe&lt;/a&gt; i.e.  if they have exactly the same leaves reading from left to right. To
+illustrate, all the blue trees below have the same fringe while none of them have the same fringe as
+the red&amp;nbsp;one.&lt;/p&gt;
+&lt;p&gt;&lt;img src="/static/images/samefringe.png"&gt;&lt;/p&gt;
+&lt;p&gt;How would we write a routine that takes two &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/misc/tree.hpp"&gt;binary trees&lt;/a&gt; and checks if they have the same&amp;nbsp;fringe?&lt;/p&gt;
+&lt;p&gt;Simple, check if the post-order traversals of the two trees are the same. That works but is
+suboptimal as it requires us to access &lt;em&gt;all&lt;/em&gt; leaf nodes in both the trees, always. Looking at all
+nodes is &lt;em&gt;necessary&lt;/em&gt; before returning a &lt;code&gt;true&lt;/code&gt; but we should be able to return &lt;code&gt;false&lt;/code&gt; sooner. For
+example, given the red and any of the blue trees from above, we can return a &lt;code&gt;false&lt;/code&gt; after looking
+at just the first node from the two trees. To do that we would have to compare the trees one leaf at
+a time. The routine would have to descend down to the first leaf and yield control back to the
+caller with the leaf value. The caller would then compare the values of two leaves received and
+return &lt;code&gt;false&lt;/code&gt; if they don&amp;#8217;t match or return control back to the routines to resume their
+traversals.  Pause a little while here and consider writing a subroutine that can do&amp;nbsp;this.&lt;/p&gt;
+&lt;p&gt;The example, though academic, gives us insight that a coroutine based generator is better when it
+makes sense to return partial results early and resume the remaining computation only if
+needed. &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/samefringe.cpp"&gt;Here&amp;#8217;s&lt;/a&gt; how we do that for the problem&amp;nbsp;above:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;misc/tree.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;boost/bind.hpp&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;boost/coroutine/all.hpp&amp;gt;&lt;/span&gt;
+
+&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;ajd&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;binary_tree&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;coroutines&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;coroutine&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;generator&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kt"&gt;bool&lt;/span&gt; &lt;span class="nf"&gt;is_leaf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;left&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="n"&gt;l&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;right&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;next_leaf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;generator&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;caller_type&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;yield&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;next_leaf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;yield&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;left&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;next_leaf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;yield&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;right&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;is_leaf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="n"&gt;yield&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt;&lt;span class="o"&gt;-&amp;gt;&lt;/span&gt;&lt;span class="n"&gt;value&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;bool&lt;/span&gt; &lt;span class="nf"&gt;same_fringe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="n"&gt;one&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="n"&gt;two&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="n"&gt;generator&lt;/span&gt; &lt;span class="n"&gt;leaf1&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;bind&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;next_leaf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;_1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;one&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+  &lt;span class="n"&gt;generator&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;bind&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;next_leaf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;_1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;two&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+
+  &lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;leaf1&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// while one of the trees has a next leaf&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;leaf1&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// if both have a next leaf&lt;/span&gt;
+      &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;leaf1&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// compare the next leaf&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// next leaves don&amp;#39;t match. return false.&lt;/span&gt;
+      &lt;span class="p"&gt;}&lt;/span&gt;
+      &lt;span class="n"&gt;leaf1&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// advance the first tree traversal&lt;/span&gt;
+      &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// advance the second tree traversal&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// one tree has more leaves than the other.&lt;/span&gt;
+      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// leaf count mismatch. return false.&lt;/span&gt;
+    &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;true&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// no mismatches found, return true.&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+  &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="n"&gt;empty&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;read_tree&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="n"&gt;red&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;read_tree&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;(-(-(-(X)(R))(-(I)(N)))(-(G)(E)))&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="n"&gt;blue1&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;read_tree&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;(-(-(-(F)(R))(-(I)(N)))(-(G)(E)))&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="n"&gt;blue2&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;read_tree&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;(-(-(-(-(-(F)(R))(I))(N))(G))(E))&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="n"&gt;blue3&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;read_tree&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;(-(-(-(-()(F))(R))(I))(-(-(-(N)())(G))(E))&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;node&lt;/span&gt; &lt;span class="n"&gt;diff&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;tree&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;read_tree&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;(-(-(-(-()(F))(R))(I))(-(-(-(N)())(G))())&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+  &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;same_fringe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;red&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+  &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;same_fringe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;red&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;blue1&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+  &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;same_fringe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;empty&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+  &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;same_fringe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;blue1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;blue2&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+  &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;same_fringe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;blue2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;blue3&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+  &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;!&lt;/span&gt;&lt;span class="n"&gt;same_fringe&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;blue2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;diff&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;That just about does it for my introduction to coroutines. Off now to less academic and more
+practical use cases for coroutines in C++ programs. Soon to&amp;nbsp;come.&lt;/p&gt;</summary><category term="C++"></category><category term="Boost"></category></entry><entry><title>Cryptographic Primitives in C++</title><link href="http://aldrin.co/crypto-primitives.html" rel="alternate"></link><updated>2013-01-14T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-01-14:crypto-primitives.html</id><summary type="html">&lt;p&gt;This page walks through the implementation of an easy-to-use C++ wrapper over the OpenSSL
 &lt;a href="http://www.openssl.org/docs/crypto/crypto.html"&gt;crypto library&lt;/a&gt;. The idea is to go through the OpenSSL documentation once, make the right
 choices from a cryptographic point of view, and then, hide all the complexity behind a reusable
 header. The following primitives are typically used in the applications I&amp;nbsp;write:&lt;/p&gt;
@@ -22,7 +165,7 @@ because it is diffcult to scrub them off once we&amp;#8217;re done using the sec
 these containers are allowed to reallocate and copy their contents in the memory and may end up with
 inaccessible copies of sensitive data that we can&amp;#8217;t overwrite. Simpler containers like
 &lt;code&gt;boost::array&lt;/code&gt; or raw char arrays are better for this purpose. You can also use the following&amp;nbsp;typedef:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="n"&gt;ajd&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="n"&gt;crypto&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="n"&gt;ajd&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="k"&gt;namespace&lt;/span&gt; &lt;span class="n"&gt;crypto&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
     &lt;span class="c1"&gt;/// A convenience typedef for a 128 bit block.&lt;/span&gt;
     &lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;array&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;block&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
     &lt;span class="c1"&gt;/// Remove sensitive data from the buffer&lt;/span&gt;
@@ -36,7 +179,7 @@ buffer by invoking &lt;code&gt;OPENSSL_cleanse&lt;/code&gt; on&amp;nbsp;it.&lt;/
 &lt;h4&gt;Secure Random Number&amp;nbsp;Generation&lt;/h4&gt;
 &lt;p&gt;OpenSSL provides a simple interface around the underlying operating system &lt;span class="caps"&gt;PRNG&lt;/span&gt;. This is exposed by
 the wrapper using the following two&amp;nbsp;functions:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Checks if the &lt;span class="caps"&gt;PRNG&lt;/span&gt; is sufficiently seeded&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Checks if the &lt;span class="caps"&gt;PRNG&lt;/span&gt; is sufficiently seeded&lt;/span&gt;
 &lt;span class="kt"&gt;bool&lt;/span&gt; &lt;span class="nf"&gt;prng_ok&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
 &lt;span class="c1"&gt;/// Fills the passed container with random bytes.&lt;/span&gt;
 &lt;span class="k"&gt;template&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;C&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;fill_random&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;C&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
@@ -48,7 +191,7 @@ mutable container with random bytes. In the exceptional situation that &lt;code&
 &lt;em&gt;must&lt;/em&gt; use use the OpenSSL seed routines &lt;code&gt;RAND_seed&lt;/code&gt; and &lt;code&gt;RAND_add&lt;/code&gt; directly to add entropy to the
 underlying&amp;nbsp;&lt;span class="caps"&gt;PRNG&lt;/span&gt;.&lt;/p&gt;
 &lt;p&gt;Here&amp;#8217;s how you can use&amp;nbsp;them:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;random_generation&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;random_generation&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;assert&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;prng_ok&lt;/span&gt;&lt;span class="p"&gt;());&lt;/span&gt;          &lt;span class="c1"&gt;// check &lt;span class="caps"&gt;PRNG&lt;/span&gt; state&lt;/span&gt;
 
@@ -68,7 +211,7 @@ routine seen above. More commonly however, we&amp;#8217;d want to derive the key
 password. The standard way to do this is using the &lt;a href="http://tools.ietf.org/html/rfc2898"&gt;&lt;span class="caps"&gt;PBKDF2&lt;/span&gt;&lt;/a&gt; algorithm which derives the key
 bits by iterating over a pseudo random function with the password and a salt as inputs. The wrapper
 sets &lt;span class="caps"&gt;HMAC&lt;/span&gt;-&lt;span class="caps"&gt;SHA&lt;/span&gt;-256 as the chosen pseudo random function and uses a default iteration count of&amp;nbsp;10000.&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Derive a key using &lt;span class="caps"&gt;PBKDF2&lt;/span&gt;-&lt;span class="caps"&gt;HMAC&lt;/span&gt;-&lt;span class="caps"&gt;SHA&lt;/span&gt;-256&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Derive a key using &lt;span class="caps"&gt;PBKDF2&lt;/span&gt;-&lt;span class="caps"&gt;HMAC&lt;/span&gt;-&lt;span class="caps"&gt;SHA&lt;/span&gt;-256&lt;/span&gt;
 &lt;span class="k"&gt;template&lt;/span&gt; &lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;C1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;C2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;typename&lt;/span&gt; &lt;span class="n"&gt;C3&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;
 &lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="n"&gt;derive_key&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;C3&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;C1&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;passwd&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;C2&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;salt&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;10000&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
@@ -79,7 +222,7 @@ invocations of this key derivation routine with the same password and salt value
 key bits. This saves us from the hassle of securely storing the secret key assuming that the
 application can interact with a human user and prompt for the&amp;nbsp;password.&lt;/p&gt;
 &lt;p&gt;Here&amp;#8217;s a sample invocation of the key derivation&amp;nbsp;routine:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;key_generation&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;key_generation&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                         &lt;span class="c1"&gt;// 128 bit key&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;salt&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                        &lt;span class="c1"&gt;// 128 bit salt&lt;/span&gt;
@@ -102,7 +245,7 @@ provides us the guarantee that an adversary couldn&amp;#8217;t have generated&am
 &lt;p&gt;&lt;span class="caps"&gt;MD5&lt;/span&gt; should not be used and &lt;span class="caps"&gt;SHA&lt;/span&gt;-1 hashes are considered weak and unsuitable for all new
 applications. The wrapper uses &lt;a href="http://csrc.nist.gov/groups/ST/toolkit/secure_hashing.html"&gt;&lt;span class="caps"&gt;SHA&lt;/span&gt;-256&lt;/a&gt; for generating plain digests and &lt;a href="http://tools.ietf.org/html/rfc2104"&gt;&lt;span class="caps"&gt;HMAC&lt;/span&gt;&lt;/a&gt; with
 &lt;span class="caps"&gt;SHA&lt;/span&gt;-256 for&amp;nbsp;MACs.&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Generates a keyed or a plain cryptographic hash.&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Generates a keyed or a plain cryptographic hash.&lt;/span&gt;
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;hash&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;noncopyable&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
 &lt;span class="nl"&gt;public:&lt;/span&gt;
@@ -130,7 +273,7 @@ the &lt;code&gt;finalize&lt;/code&gt; method. The shorthand typedef &lt;code&gt;
 &lt;code&gt;finalize&lt;/code&gt; method also reinitializes the underlying hash context and resets the instance for a fresh
 hash&amp;nbsp;computation.&lt;/p&gt;
 &lt;p&gt;Here&amp;#8217;s how you can use the&amp;nbsp;class:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;message_digest&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;message_digest&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;hash&lt;/span&gt; &lt;span class="n"&gt;md&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;              &lt;span class="c1"&gt;// the hash object&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;hash&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;value&lt;/span&gt; &lt;span class="n"&gt;sha&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;      &lt;span class="c1"&gt;// the hash value&lt;/span&gt;
@@ -169,7 +312,7 @@ guarded against modifications in transit. Authenticated encryption schemes allow
 such data into the tag computation. So while the adversary can view this data in transit, it cannot
 be modified without the decryption routine noticing&amp;nbsp;it.&lt;/p&gt;
 &lt;p&gt;The following class provides authenticated encryption with associated&amp;nbsp;data:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Provides authenticated encryption (&lt;span class="caps"&gt;AES&lt;/span&gt;-128-&lt;span class="caps"&gt;GCM&lt;/span&gt;)&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c1"&gt;/// Provides authenticated encryption (&lt;span class="caps"&gt;AES&lt;/span&gt;-128-&lt;span class="caps"&gt;GCM&lt;/span&gt;)&lt;/span&gt;
 &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;cipher&lt;/span&gt; &lt;span class="o"&gt;:&lt;/span&gt; &lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;noncopyable&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
 &lt;span class="nl"&gt;public:&lt;/span&gt;
@@ -210,7 +353,7 @@ plaintext, the &lt;code&gt;verify&lt;/code&gt; method must be invoked to detect 
 associated data. If all is well the method silently returns, however if the seal does not match the
 expected tag value, an exception is raised and the decrypted plaintext &lt;em&gt;must&lt;/em&gt; be&amp;nbsp;rejected.&lt;/p&gt;
 &lt;p&gt;The following sample shows the&amp;nbsp;usage:&lt;/p&gt;
-&lt;div class="codehilite"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;authenticated_encrypt_decrypt&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;void&lt;/span&gt; &lt;span class="nf"&gt;authenticated_encrypt_decrypt&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;iv&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                           &lt;span class="c1"&gt;// initialization vector&lt;/span&gt;
   &lt;span class="n"&gt;crypto&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;block&lt;/span&gt; &lt;span class="n"&gt;key&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;                          &lt;span class="c1"&gt;// encryption key&lt;/span&gt;

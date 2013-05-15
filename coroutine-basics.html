@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>A Boost.Coroutine&nbsp;Primer</title>
+    <meta name="author" content="Aldrin D'Souza">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="WgWezQUyzDnfImQwdhZtLV7Sx8VBOgt9vCnOqgbhF7s"/>
+         <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.0/css/font-awesome.css" rel="stylesheet">
+    <link href="//fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet" type="text/css">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.0/css/font-awesome-ie7.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/theme/css/code.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/ajdweb.css">
+    <!--
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});</script>
+        <script type='text/javascript' src='http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
+        -->
+  </head>
+  <body>
+    <div class="container ">
+      <div class="row">
+        <article class="offset1 span10">
+          <h1> A Boost.Coroutine&nbsp;Primer </h1>
+
+<ul class="breadcrumb">
+  <li><i class="icon-calendar"></i>Mar 08, 2013</li>
+      <li><i class="icon-tag"></i><a href="http://aldrin.co/tag/c.html">C++</a></li>
+    <li><i class="icon-tag"></i><a href="http://aldrin.co/tag/boost.html">Boost</a></li>
+      <li class="pull-right hidden-phone">
+    <i class="icon-comment"></i>
+    <a href="#feedback" data-toggle="modal">Comments?</a>
+  </li>
+</ul>
+<p>An ideal subroutine is a mathematical function; it takes inputs and returns the results of its
+computation. It has a single entry point and all data local to it is initialized upon entry and
+cleaned up when it returns to the caller. The next call, if any, starts all over again and no local
+residues are carried over from the last invocation. A coroutine is an interesting deviation from
+these conventions. It can <em>yield</em> control back to the caller as soon as there are partial results
+that can be put to use. Moreover, when invoked again, it can <em>resume</em> the computation from where it
+left. These <em>yield/resume</em> semantics make coroutines a better unit of structuring programs for
+certain types of&nbsp;problems.</p>
+<p>This page is an introduction to writing coroutines in C++ using the <a href="http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html">Boost.Coroutine</a>&nbsp;library.</p>
+<h4>Python&nbsp;xrange</h4>
+<p>Consider writing the Python built-in function <a href="http://docs.python.org/2/library/functions.html#xrange"><code>xrange</code></a> which takes a number n returns a
+sequence of numbers from 0 to n <em>without actually storing them all simulatenously</em>. An <em>ideal</em>
+subroutine cannot do this and we&#8217;d need either a functor that holds state between invocations or a
+coroutine. <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/xrange.cpp">Here&#8217;s</a> the&nbsp;latter:</p>
+<div class="highlight"><pre><span class="cp">#include &lt;boost/bind.hpp&gt;</span>
+<span class="cp">#include &lt;boost/coroutine/coroutine.hpp&gt;</span>
+
+<span class="c1">// The coroutine type.</span>
+<span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">coroutines</span><span class="o">::</span><span class="n">coroutine</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">()</span><span class="o">&gt;</span> <span class="n">coro</span><span class="p">;</span>
+
+<span class="c1">// The implementation routine of the coroutine.</span>
+<span class="kt">void</span> <span class="nf">xrange_impl</span><span class="p">(</span><span class="n">coro</span><span class="o">::</span><span class="n">caller_type</span><span class="o">&amp;</span> <span class="n">yield</span><span class="p">,</span> <span class="kt">int</span> <span class="n">limit</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">limit</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">yield</span><span class="p">(</span><span class="n">i</span><span class="p">);</span> <span class="c1">// return results back to the caller</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="c1">// Construct the coroutine instance</span>
+  <span class="n">coro</span> <span class="n">xrange</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="n">xrange_impl</span><span class="p">,</span> <span class="n">_1</span><span class="p">,</span> <span class="mi">10000</span><span class="p">));</span>
+
+  <span class="kt">int</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="k">while</span><span class="p">(</span><span class="n">xrange</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// Check completion status</span>
+    <span class="n">sum</span> <span class="o">+=</span> <span class="n">xrange</span><span class="p">.</span><span class="n">get</span><span class="p">();</span> <span class="c1">// Extract yielded result</span>
+    <span class="n">xrange</span><span class="p">();</span> <span class="c1">// Fire it again.</span>
+  <span class="p">}</span>
+  <span class="n">assert</span><span class="p">(</span><span class="n">sum</span> <span class="o">==</span> <span class="mi">49995000</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Here&#8217;s a (not so) quick walkthrough of the&nbsp;code:</p>
+<p>We start by defining our coroutine type by instantiating the <code>boost::coroutines::coroutine</code> template
+class with the logical signature of the generator. This logical signature, here, is <code>int()</code> because
+our coroutine is expected to generate integers. The complete type (which we typedef as <code>coro</code> to
+save us some typing) is thus: <code>boost::coroutines::coroutine&lt;int()&gt;</code>.</p>
+<p>Next, we provide the implementation of the coroutine as the <code>xrange_impl</code> function. This function is
+meant to be invoked repeatedly and is expected to yield the next number in the sequence back to its
+caller. Remember that coroutines operate in pairs, i.e. a coroutine (unlike a subroutine) does not
+<em>return</em> a value back to its caller, instead, it <em>calls</em> the caller back with the result and the
+first parameter that the implementation routine takes is a reference to that&nbsp;callable.</p>
+<p>This callable is actually the <em>inverse</em> coroutine (a.k.a. the calling coroutine.) For the xrange
+example, where we&#8217;re writing a coroutine that generates integer values, the inverse coroutine is one
+that <em>consumes</em> integer values, i.e. <code>boost::coroutines::coroutine&lt;void(int)&gt;</code>. We don&#8217;t need to
+compute the inverse type manually, because the coroutine type conveniently provides it as a member
+typedef <code>caller_type</code>. The implementation routine can take other parameters (like <code>limit</code>) but those
+must be bound to their values at the time of the coroutine construction like we do in <code>main</code>. It is
+also possible for the coroutine itself to require values <em>per invocation</em> but let&#8217;s leave that aside
+for a&nbsp;while.</p>
+<p>Next, with the coroutine instance ready, we iterate over it to extract values it yields. These
+values can be extracted using the <code>xrange.get()</code> function (its return type is the return type of the
+logical signature of the coroutine, i.e. <code>int</code>) and completion can be checked using the implicit
+bool conversion operator. The next invocation can be triggered by invoking the function call
+operator (it takes the same parameters as the logical&nbsp;signature.)</p>
+<p>That does it for xrange. Hopefully, my confused rambling made sense. Let&#8217;s take on a slightly more
+complicated&nbsp;generator.</p>
+<h4>Same&nbsp;Fringe</h4>
+<p>Consider the problem of writing a routine that checks if two binary trees have the
+<a href="http://c2.com/cgi/wiki?SameFringeProblem">same fringe</a> i.e.  if they have exactly the same leaves reading from left to right. To
+illustrate, all the blue trees below have the same fringe while none of them have the same fringe as
+the red&nbsp;one.</p>
+<p><img src="/static/images/samefringe.png"></p>
+<p>How would we write a routine that takes two <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/misc/tree.hpp">binary trees</a> and checks if they have the same&nbsp;fringe?</p>
+<p>Simple, check if the post-order traversals of the two trees are the same. That works but is
+suboptimal as it requires us to access <em>all</em> leaf nodes in both the trees, always. Looking at all
+nodes is <em>necessary</em> before returning a <code>true</code> but we should be able to return <code>false</code> sooner. For
+example, given the red and any of the blue trees from above, we can return a <code>false</code> after looking
+at just the first node from the two trees. To do that we would have to compare the trees one leaf at
+a time. The routine would have to descend down to the first leaf and yield control back to the
+caller with the leaf value. The caller would then compare the values of two leaves received and
+return <code>false</code> if they don&#8217;t match or return control back to the routines to resume their
+traversals.  Pause a little while here and consider writing a subroutine that can do&nbsp;this.</p>
+<p>The example, though academic, gives us insight that a coroutine based generator is better when it
+makes sense to return partial results early and resume the remaining computation only if
+needed. <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/samefringe.cpp">Here&#8217;s</a> how we do that for the problem&nbsp;above:</p>
+<div class="highlight"><pre><span class="cp">#include &lt;misc/tree.h&gt;</span>
+<span class="cp">#include &lt;boost/bind.hpp&gt;</span>
+<span class="cp">#include &lt;boost/coroutine/all.hpp&gt;</span>
+
+<span class="k">typedef</span> <span class="n">ajd</span><span class="o">::</span><span class="n">binary_tree</span><span class="o">&lt;</span><span class="kt">char</span><span class="o">&gt;</span> <span class="n">tree</span><span class="p">;</span>
+<span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">coroutines</span><span class="o">::</span><span class="n">coroutine</span><span class="o">&lt;</span><span class="kt">char</span><span class="p">()</span><span class="o">&gt;</span> <span class="n">generator</span><span class="p">;</span>
+
+<span class="kt">bool</span> <span class="nf">is_leaf</span><span class="p">(</span><span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">l</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="o">!</span><span class="p">(</span><span class="n">l</span><span class="o">-&gt;</span><span class="n">left</span> <span class="o">||</span> <span class="n">l</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">);</span> <span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">next_leaf</span><span class="p">(</span><span class="n">generator</span><span class="o">::</span><span class="n">caller_type</span><span class="o">&amp;</span> <span class="n">yield</span><span class="p">,</span> <span class="n">tree</span><span class="o">::</span><span class="n">node</span><span class="o">&amp;</span> <span class="n">node</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">if</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">next_leaf</span><span class="p">(</span><span class="n">yield</span><span class="p">,</span> <span class="n">node</span><span class="o">-&gt;</span><span class="n">left</span><span class="p">);</span>
+    <span class="n">next_leaf</span><span class="p">(</span><span class="n">yield</span><span class="p">,</span> <span class="n">node</span><span class="o">-&gt;</span><span class="n">right</span><span class="p">);</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">is_leaf</span><span class="p">(</span><span class="n">node</span><span class="p">))</span> <span class="p">{</span> <span class="n">yield</span><span class="p">(</span><span class="n">node</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">);</span> <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="kt">bool</span> <span class="nf">same_fringe</span><span class="p">(</span><span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">one</span><span class="p">,</span> <span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">two</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="n">generator</span> <span class="n">leaf1</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="n">next_leaf</span><span class="p">,</span> <span class="n">_1</span><span class="p">,</span> <span class="n">one</span><span class="p">));</span>
+  <span class="n">generator</span> <span class="n">leaf2</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="n">next_leaf</span><span class="p">,</span> <span class="n">_1</span><span class="p">,</span> <span class="n">two</span><span class="p">));</span>
+
+  <span class="k">while</span><span class="p">(</span><span class="n">leaf1</span> <span class="o">||</span> <span class="n">leaf2</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// while one of the trees has a next leaf</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">leaf1</span> <span class="o">&amp;&amp;</span> <span class="n">leaf2</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// if both have a next leaf</span>
+      <span class="k">if</span><span class="p">(</span><span class="n">leaf1</span><span class="p">.</span><span class="n">get</span><span class="p">()</span> <span class="o">!=</span> <span class="n">leaf2</span><span class="p">.</span><span class="n">get</span><span class="p">())</span> <span class="p">{</span> <span class="c1">// compare the next leaf</span>
+        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span> <span class="c1">// next leaves don&#39;t match. return false.</span>
+      <span class="p">}</span>
+      <span class="n">leaf1</span><span class="p">();</span> <span class="c1">// advance the first tree traversal</span>
+      <span class="n">leaf2</span><span class="p">();</span> <span class="c1">// advance the second tree traversal</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span> <span class="c1">// one tree has more leaves than the other.</span>
+      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span> <span class="c1">// leaf count mismatch. return false.</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nb">true</span><span class="p">;</span> <span class="c1">// no mismatches found, return true.</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">empty</span> <span class="o">=</span> <span class="n">tree</span><span class="o">::</span><span class="n">read_tree</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">);</span>
+  <span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">red</span> <span class="o">=</span> <span class="n">tree</span><span class="o">::</span><span class="n">read_tree</span><span class="p">(</span><span class="s">&quot;(-(-(-(X)(R))(-(I)(N)))(-(G)(E)))&quot;</span><span class="p">);</span>
+  <span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">blue1</span> <span class="o">=</span> <span class="n">tree</span><span class="o">::</span><span class="n">read_tree</span><span class="p">(</span><span class="s">&quot;(-(-(-(F)(R))(-(I)(N)))(-(G)(E)))&quot;</span><span class="p">);</span>
+  <span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">blue2</span> <span class="o">=</span> <span class="n">tree</span><span class="o">::</span><span class="n">read_tree</span><span class="p">(</span><span class="s">&quot;(-(-(-(-(-(F)(R))(I))(N))(G))(E))&quot;</span><span class="p">);</span>
+  <span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">blue3</span> <span class="o">=</span> <span class="n">tree</span><span class="o">::</span><span class="n">read_tree</span><span class="p">(</span><span class="s">&quot;(-(-(-(-()(F))(R))(I))(-(-(-(N)())(G))(E))&quot;</span><span class="p">);</span>
+  <span class="n">tree</span><span class="o">::</span><span class="n">node</span> <span class="n">diff</span> <span class="o">=</span> <span class="n">tree</span><span class="o">::</span><span class="n">read_tree</span><span class="p">(</span><span class="s">&quot;(-(-(-(-()(F))(R))(I))(-(-(-(N)())(G))())&quot;</span><span class="p">);</span>
+  <span class="n">assert</span><span class="p">(</span><span class="o">!</span><span class="n">same_fringe</span><span class="p">(</span><span class="n">empty</span><span class="p">,</span> <span class="n">red</span><span class="p">));</span>
+  <span class="n">assert</span><span class="p">(</span><span class="o">!</span><span class="n">same_fringe</span><span class="p">(</span><span class="n">red</span><span class="p">,</span> <span class="n">blue1</span><span class="p">));</span>
+  <span class="n">assert</span><span class="p">(</span><span class="n">same_fringe</span><span class="p">(</span><span class="n">empty</span><span class="p">,</span> <span class="n">empty</span><span class="p">));</span>
+  <span class="n">assert</span><span class="p">(</span><span class="n">same_fringe</span><span class="p">(</span><span class="n">blue1</span><span class="p">,</span> <span class="n">blue2</span><span class="p">));</span>
+  <span class="n">assert</span><span class="p">(</span><span class="n">same_fringe</span><span class="p">(</span><span class="n">blue2</span><span class="p">,</span> <span class="n">blue3</span><span class="p">));</span>
+  <span class="n">assert</span><span class="p">(</span><span class="o">!</span><span class="n">same_fringe</span><span class="p">(</span><span class="n">blue2</span><span class="p">,</span> <span class="n">diff</span><span class="p">));</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>That just about does it for my introduction to coroutines. Off now to less academic and more
+practical use cases for coroutines in C++ programs. Soon to&nbsp;come.</p>
+<!-- Comments -->
+<div id="feedback" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div id="disqus_thread"></div>
+  <div class="modal-footer">
+    <center>
+      <button class="btn btn-large btn-primary" data-keyboard="true" data-dismiss="modal" aria-hidden="true">Dismiss</button>
+    </center>
+  </div>
+</div>
+          <center>
+            <footer>
+              <div>
+                <a href="https://github.com/aldrin/home"><i class="icon-github-alt"></i></a>
+                                <a href="/"><i class="icon-home"></i></a>
+                                <!-- <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a> -->
+              </div>
+              <small class="muted">&copy; 2013 Aldrin D'Souza</small>
+            </footer>
+          </center>
+        </article>
+      </div>
+    </div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script> 
+    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-37780098-1']);
+      _gaq.push(['_trackPageview']);
+      
+      (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    <script type="text/javascript">
+      /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+      var disqus_shortname = 'a1drin'; // required: replace example with your forum shortname
+
+      /* * * DON'T EDIT BELOW THIS LINE * * */
+      (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+  </body>
+</html>

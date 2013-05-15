@@ -20,6 +20,7 @@ clean:
 	rm -rf $(OUTPUTDIR)/theme
 	rm -rf $(OUTPUTDIR)/static
 	rm -rf $(OUTPUTDIR)/author
+	rm -rf $(OUTPUTDIR)/drafts
 	rm -rf $(OUTPUTDIR)/category
 	rm -f $(OUTPUTDIR)/*.html
 

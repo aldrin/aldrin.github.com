@@ -26,8 +26,8 @@
 
 <ul class="breadcrumb">
   <li><i class="icon-calendar"></i>Jan 14, 2013</li>
-      <li><i class="icon-tag"></i><a href="./tag/security.html">Security</a></li>
-    <li><i class="icon-tag"></i><a href="./tag/c.html">C++</a></li>
+      <li><i class="icon-tag"></i><a href="http://aldrin.co/tag/security.html">Security</a></li>
+    <li><i class="icon-tag"></i><a href="http://aldrin.co/tag/c.html">C++</a></li>
       <li class="pull-right hidden-phone">
     <i class="icon-comment"></i>
     <a href="#feedback" data-toggle="modal">Comments?</a>
@@ -56,7 +56,7 @@ because it is diffcult to scrub them off once we&#8217;re done using the secrets
 these containers are allowed to reallocate and copy their contents in the memory and may end up with
 inaccessible copies of sensitive data that we can&#8217;t overwrite. Simpler containers like
 <code>boost::array</code> or raw char arrays are better for this purpose. You can also use the following&nbsp;typedef:</p>
-<div class="codehilite"><pre><span class="k">namespace</span> <span class="n">ajd</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">crypto</span> <span class="p">{</span>
+<div class="highlight"><pre><span class="k">namespace</span> <span class="n">ajd</span> <span class="p">{</span> <span class="k">namespace</span> <span class="n">crypto</span> <span class="p">{</span>
     <span class="c1">/// A convenience typedef for a 128 bit block.</span>
     <span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">array</span><span class="o">&lt;</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">,</span> <span class="mi">16</span><span class="o">&gt;</span> <span class="n">block</span><span class="p">;</span>
     <span class="c1">/// Remove sensitive data from the buffer</span>
@@ -70,7 +70,7 @@ buffer by invoking <code>OPENSSL_cleanse</code> on&nbsp;it.</p>
 <h4>Secure Random Number&nbsp;Generation</h4>
 <p>OpenSSL provides a simple interface around the underlying operating system <span class="caps">PRNG</span>. This is exposed by
 the wrapper using the following two&nbsp;functions:</p>
-<div class="codehilite"><pre><span class="c1">/// Checks if the <span class="caps">PRNG</span> is sufficiently seeded</span>
+<div class="highlight"><pre><span class="c1">/// Checks if the <span class="caps">PRNG</span> is sufficiently seeded</span>
 <span class="kt">bool</span> <span class="nf">prng_ok</span><span class="p">();</span>
 <span class="c1">/// Fills the passed container with random bytes.</span>
 <span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">C</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="n">fill_random</span><span class="p">(</span><span class="n">C</span> <span class="o">&amp;</span><span class="n">c</span><span class="p">);</span>
@@ -82,7 +82,7 @@ mutable container with random bytes. In the exceptional situation that <code>prn
 <em>must</em> use use the OpenSSL seed routines <code>RAND_seed</code> and <code>RAND_add</code> directly to add entropy to the
 underlying&nbsp;<span class="caps">PRNG</span>.</p>
 <p>Here&#8217;s how you can use&nbsp;them:</p>
-<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">random_generation</span><span class="p">()</span>
+<div class="highlight"><pre><span class="kt">void</span> <span class="nf">random_generation</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">assert</span><span class="p">(</span><span class="n">crypto</span><span class="o">::</span><span class="n">prng_ok</span><span class="p">());</span>          <span class="c1">// check <span class="caps">PRNG</span> state</span>
 
@@ -102,7 +102,7 @@ routine seen above. More commonly however, we&#8217;d want to derive the key bit
 password. The standard way to do this is using the <a href="http://tools.ietf.org/html/rfc2898"><span class="caps">PBKDF2</span></a> algorithm which derives the key
 bits by iterating over a pseudo random function with the password and a salt as inputs. The wrapper
 sets <span class="caps">HMAC</span>-<span class="caps">SHA</span>-256 as the chosen pseudo random function and uses a default iteration count of&nbsp;10000.</p>
-<div class="codehilite"><pre><span class="c1">/// Derive a key using <span class="caps">PBKDF2</span>-<span class="caps">HMAC</span>-<span class="caps">SHA</span>-256</span>
+<div class="highlight"><pre><span class="c1">/// Derive a key using <span class="caps">PBKDF2</span>-<span class="caps">HMAC</span>-<span class="caps">SHA</span>-256</span>
 <span class="k">template</span> <span class="o">&lt;</span><span class="k">typename</span> <span class="n">C1</span><span class="p">,</span> <span class="k">typename</span> <span class="n">C2</span><span class="p">,</span> <span class="k">typename</span> <span class="n">C3</span><span class="o">&gt;</span>
 <span class="kt">void</span> <span class="n">derive_key</span><span class="p">(</span><span class="n">C3</span> <span class="o">&amp;</span><span class="n">key</span><span class="p">,</span> <span class="k">const</span> <span class="n">C1</span> <span class="o">&amp;</span><span class="n">passwd</span><span class="p">,</span> <span class="k">const</span> <span class="n">C2</span> <span class="o">&amp;</span><span class="n">salt</span><span class="p">,</span> <span class="kt">int</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">)</span>
 </pre></div>
@@ -113,7 +113,7 @@ invocations of this key derivation routine with the same password and salt value
 key bits. This saves us from the hassle of securely storing the secret key assuming that the
 application can interact with a human user and prompt for the&nbsp;password.</p>
 <p>Here&#8217;s a sample invocation of the key derivation&nbsp;routine:</p>
-<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">key_generation</span><span class="p">()</span>
+<div class="highlight"><pre><span class="kt">void</span> <span class="nf">key_generation</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">key</span><span class="p">;</span>                         <span class="c1">// 128 bit key</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">salt</span><span class="p">;</span>                        <span class="c1">// 128 bit salt</span>
@@ -136,7 +136,7 @@ provides us the guarantee that an adversary couldn&#8217;t have generated&nbsp;i
 <p><span class="caps">MD5</span> should not be used and <span class="caps">SHA</span>-1 hashes are considered weak and unsuitable for all new
 applications. The wrapper uses <a href="http://csrc.nist.gov/groups/ST/toolkit/secure_hashing.html"><span class="caps">SHA</span>-256</a> for generating plain digests and <a href="http://tools.ietf.org/html/rfc2104"><span class="caps">HMAC</span></a> with
 <span class="caps">SHA</span>-256 for&nbsp;MACs.</p>
-<div class="codehilite"><pre><span class="c1">/// Generates a keyed or a plain cryptographic hash.</span>
+<div class="highlight"><pre><span class="c1">/// Generates a keyed or a plain cryptographic hash.</span>
 <span class="k">class</span> <span class="nc">hash</span><span class="o">:</span> <span class="n">boost</span><span class="o">::</span><span class="n">noncopyable</span>
 <span class="p">{</span>
 <span class="nl">public:</span>
@@ -164,7 +164,7 @@ the <code>finalize</code> method. The shorthand typedef <code>hash::value</code>
 <code>finalize</code> method also reinitializes the underlying hash context and resets the instance for a fresh
 hash&nbsp;computation.</p>
 <p>Here&#8217;s how you can use the&nbsp;class:</p>
-<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">message_digest</span><span class="p">()</span>
+<div class="highlight"><pre><span class="kt">void</span> <span class="nf">message_digest</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">hash</span> <span class="n">md</span><span class="p">;</span>              <span class="c1">// the hash object</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">hash</span><span class="o">::</span><span class="n">value</span> <span class="n">sha</span><span class="p">;</span>      <span class="c1">// the hash value</span>
@@ -203,7 +203,7 @@ guarded against modifications in transit. Authenticated encryption schemes allow
 such data into the tag computation. So while the adversary can view this data in transit, it cannot
 be modified without the decryption routine noticing&nbsp;it.</p>
 <p>The following class provides authenticated encryption with associated&nbsp;data:</p>
-<div class="codehilite"><pre><span class="c1">/// Provides authenticated encryption (<span class="caps">AES</span>-128-<span class="caps">GCM</span>)</span>
+<div class="highlight"><pre><span class="c1">/// Provides authenticated encryption (<span class="caps">AES</span>-128-<span class="caps">GCM</span>)</span>
 <span class="k">class</span> <span class="nc">cipher</span> <span class="o">:</span> <span class="n">boost</span><span class="o">::</span><span class="n">noncopyable</span>
 <span class="p">{</span>
 <span class="nl">public:</span>
@@ -244,7 +244,7 @@ plaintext, the <code>verify</code> method must be invoked to detect any tamperin
 associated data. If all is well the method silently returns, however if the seal does not match the
 expected tag value, an exception is raised and the decrypted plaintext <em>must</em> be&nbsp;rejected.</p>
 <p>The following sample shows the&nbsp;usage:</p>
-<div class="codehilite"><pre><span class="kt">void</span> <span class="nf">authenticated_encrypt_decrypt</span><span class="p">()</span>
+<div class="highlight"><pre><span class="kt">void</span> <span class="nf">authenticated_encrypt_decrypt</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">iv</span><span class="p">;</span>                           <span class="c1">// initialization vector</span>
   <span class="n">crypto</span><span class="o">::</span><span class="n">block</span> <span class="n">key</span><span class="p">;</span>                          <span class="c1">// encryption key</span>
