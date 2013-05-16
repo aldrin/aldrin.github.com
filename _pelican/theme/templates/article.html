@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ article.title }}{% endblock %}
+{% block meta %}<meta name="Description" content="Author: Aldrin D'Souza, Summary: {{article.summary | striptags}}">{% endblock %}
 {% block content %}
 <h1> {{ article.title }} </h1>
 

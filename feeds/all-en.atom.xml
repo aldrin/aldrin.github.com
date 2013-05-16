@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Aldrin's Notebook</title><link href="http://aldrin.co/" rel="alternate"></link><link href="http://aldrin.co/feeds/all-en.atom.xml" rel="self"></link><id>http://aldrin.co/</id><updated>2013-03-08T00:00:00+05:30</updated><entry><title>A Boost Coroutine Tutorial</title><link href="http://aldrin.co/coroutine-basics.html" rel="alternate"></link><updated>2013-03-08T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-03-08:coroutine-basics.html</id><summary type="html">&lt;p&gt;An ideal subroutine is a mathematical function; it takes inputs and returns the results of its
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Aldrin's Notebook</title><link href="http://aldrin.co/" rel="alternate"></link><link href="http://aldrin.co/feeds/all-en.atom.xml" rel="self"></link><id>http://aldrin.co/</id><updated>2013-03-08T00:00:00+05:30</updated><entry><title>Coroutines in C++</title><link href="http://aldrin.co/coroutine-basics.html" rel="alternate"></link><updated>2013-03-08T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-03-08:coroutine-basics.html</id><summary type="html">&lt;p&gt;An ideal subroutine is a mathematical function; it takes inputs and returns the results of its
 computation. It has a single entry point and all data local to it is initialized upon entry and
 cleaned up when it returns to the caller. The next call, if any, starts all over again and no local
 residues are carried over from the last invocation. A coroutine, is an interesting deviation from
@@ -65,8 +65,7 @@ done using the &lt;code&gt;xrange.get()&lt;/code&gt; function (its return type i
 of the coroutine, i.e. &lt;code&gt;int&lt;/code&gt;). Coroutine completion can be checked using the implicit boolean
 conversion operator and the next invocation can be triggered by invoking the function call operator
 (it takes the same parameters as the logical&amp;nbsp;signature.)&lt;/p&gt;
-&lt;p&gt;With these in place, our C++ xrange routine is done. Hopefully, that made&amp;nbsp;sense. &lt;/p&gt;
-&lt;p&gt;Let&amp;#8217;s take on a slightly more complicated&amp;nbsp;generator.&lt;/p&gt;
+&lt;p&gt;With these in place, our C++ xrange routine is done. Let&amp;#8217;s take on a slightly more complicated&amp;nbsp;generator.&lt;/p&gt;
 &lt;h4&gt;Same&amp;nbsp;Fringe&lt;/h4&gt;
 &lt;p&gt;Consider the problem of writing a routine that checks if two binary trees have the
 &lt;a href="http://c2.com/cgi/wiki?SameFringeProblem"&gt;same fringe&lt;/a&gt; i.e.  if they have exactly the same leaves reading from left to right. To
@@ -74,7 +73,7 @@ illustrate, all the blue trees below have the same fringe while none of them hav
 the red&amp;nbsp;one.&lt;/p&gt;
 &lt;p&gt;&lt;img src="/static/images/samefringe.png"&gt;&lt;/p&gt;
 &lt;p&gt;How would we write a routine that takes two &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/misc/tree.hpp"&gt;binary trees&lt;/a&gt; and checks if they have the same&amp;nbsp;fringe?&lt;/p&gt;
-&lt;p&gt;Simple, check if the post-order traversals of the two trees are the same. That works but is
+&lt;p&gt;Simple, check if the post-order traversals of the two trees are the same. That works, but is
 suboptimal as it requires us to access &lt;em&gt;all&lt;/em&gt; leaf nodes in both the trees, always. Looking at all
 nodes is &lt;em&gt;necessary&lt;/em&gt; before returning a &lt;code&gt;true&lt;/code&gt; but we should be able to return &lt;code&gt;false&lt;/code&gt; sooner. For
 example, given the red and any of the blue trees from above, we can return a &lt;code&gt;false&lt;/code&gt; after looking
@@ -108,19 +107,15 @@ needed. &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;generator&lt;/span&gt; &lt;span class="n"&gt;leaf1&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;bind&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;next_leaf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;_1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;one&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
   &lt;span class="n"&gt;generator&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;boost&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;bind&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;next_leaf&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;_1&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;two&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
-
-  &lt;span class="k"&gt;while&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;leaf1&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// while one of the trees has a next leaf&lt;/span&gt;
-    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;leaf1&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// if both have a next leaf&lt;/span&gt;
-      &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;leaf1&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// compare the next leaf&lt;/span&gt;
-        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// next leaves don&amp;#39;t match. return false.&lt;/span&gt;
-      &lt;span class="p"&gt;}&lt;/span&gt;
-      &lt;span class="n"&gt;leaf1&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// advance the first tree traversal&lt;/span&gt;
-      &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt; &lt;span class="c1"&gt;// advance the second tree traversal&lt;/span&gt;
-    &lt;span class="p"&gt;}&lt;/span&gt; &lt;span class="k"&gt;else&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt; &lt;span class="c1"&gt;// one tree has more leaves than the other.&lt;/span&gt;
-      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// leaf count mismatch. return false.&lt;/span&gt;
+  &lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="p"&gt;(;&lt;/span&gt; &lt;span class="n"&gt;leaf1&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="n"&gt;leaf1&lt;/span&gt;&lt;span class="p"&gt;(),&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="c1"&gt;// iterate till *both* traversal are active&lt;/span&gt;
+    &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;leaf1&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;().&lt;/span&gt;&lt;span class="n"&gt;get&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="c1"&gt;// compare the next leaf node&lt;/span&gt;
+      &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="c1"&gt;// return false, if they don&amp;#39;t match.&lt;/span&gt;
     &lt;span class="p"&gt;}&lt;/span&gt;
   &lt;span class="p"&gt;}&lt;/span&gt;
-  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;true&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// no mismatches found, return true.&lt;/span&gt;
+  &lt;span class="k"&gt;if&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;leaf1&lt;/span&gt; &lt;span class="o"&gt;||&lt;/span&gt; &lt;span class="n"&gt;leaf2&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;&lt;span class="c1"&gt;// if one of the traversals is still active,&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;false&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="c1"&gt;// one tree has more leaves than the other.&lt;/span&gt;
+  &lt;span class="p"&gt;}&lt;/span&gt;
+  &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="nb"&gt;true&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="p"&gt;}&lt;/span&gt;
 
 &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
@@ -141,10 +136,15 @@ needed. &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;Note that the logical type of the coroutine here is &lt;code&gt;char()&lt;/code&gt; because this coroutine is expected to
-generate char values contained in the leaf nodes. That just about does it for my introduction to
-coroutines. Off now to less academic and more practical use cases for coroutines in C++
-programs. Soon to&amp;nbsp;come.&lt;/p&gt;</summary><category term="C++"></category><category term="Boost"></category></entry><entry><title>Cryptographic Primitives in C++</title><link href="http://aldrin.co/crypto-primitives.html" rel="alternate"></link><updated>2013-01-14T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-01-14:crypto-primitives.html</id><summary type="html">&lt;p&gt;This page walks through the implementation of an easy-to-use C++ wrapper over the OpenSSL
+&lt;p&gt;The logical type of the coroutine here is &lt;code&gt;char()&lt;/code&gt; because it is expected to generate char values
+contained in the leaf nodes. The function &lt;code&gt;next_leaf&lt;/code&gt; is the implementation function that traverses
+a tree recursively and yields the leaf node values in post-order. The tree instance it has to
+traverse is passed along with the required &lt;code&gt;caller_type&amp;amp;&lt;/code&gt; parameter. The &lt;code&gt;same_fringe&lt;/code&gt; routine
+instantiates the two generators and binds them to the two trees under consideration. Then it
+extracts the leaves and compares them to ensure that we return false as soon as we&amp;#8217;re certain that
+the fringes differ. In the best case, we return after just one node comparison and that is something
+that is difficult to achieve without using&amp;nbsp;coroutines.&lt;/p&gt;
+&lt;p&gt;So then, dear reader, that just about does it for my introduction to coroutines. Hope you found it&amp;nbsp;useful.&lt;/p&gt;</summary><category term="C++"></category><category term="Boost"></category></entry><entry><title>Cryptographic Primitives in C++</title><link href="http://aldrin.co/crypto-primitives.html" rel="alternate"></link><updated>2013-01-14T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-01-14:crypto-primitives.html</id><summary type="html">&lt;p&gt;This page walks through the implementation of an easy-to-use C++ wrapper over the OpenSSL
 &lt;a href="http://www.openssl.org/docs/crypto/crypto.html"&gt;crypto library&lt;/a&gt;. The idea is to go through the OpenSSL documentation once, make the right
 choices from a cryptographic point of view, and then, hide all the complexity behind a reusable
 header. The following primitives are typically used in the applications I&amp;nbsp;write:&lt;/p&gt;

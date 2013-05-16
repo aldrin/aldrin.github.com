@@ -2,11 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>A Boost Coroutine&nbsp;Tutorial</title>
+    <title>Coroutines in&nbsp;C++</title>
     <meta name="author" content="Aldrin D'Souza">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="WgWezQUyzDnfImQwdhZtLV7Sx8VBOgt9vCnOqgbhF7s"/>
-         <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
+    <meta name="Description" content="Author: Aldrin D'Souza, Summary: A tutorial on Boost Coroutine library for coroutines in C++">    <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
     <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.0/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.0/css/font-awesome.css" rel="stylesheet">
     <link href="//fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet" type="text/css">
@@ -22,7 +22,7 @@
     <div class="container ">
       <div class="row">
         <article class="offset1 span10">
-          <h1> A Boost Coroutine&nbsp;Tutorial </h1>
+          <h1> Coroutines in&nbsp;C++ </h1>
 
 <ul class="breadcrumb">
   <li><i class="icon-calendar"></i>Mar 08, 2013</li>
@@ -99,8 +99,7 @@ done using the <code>xrange.get()</code> function (its return type is the return
 of the coroutine, i.e. <code>int</code>). Coroutine completion can be checked using the implicit boolean
 conversion operator and the next invocation can be triggered by invoking the function call operator
 (it takes the same parameters as the logical&nbsp;signature.)</p>
-<p>With these in place, our C++ xrange routine is done. Hopefully, that made&nbsp;sense. </p>
-<p>Let&#8217;s take on a slightly more complicated&nbsp;generator.</p>
+<p>With these in place, our C++ xrange routine is done. Let&#8217;s take on a slightly more complicated&nbsp;generator.</p>
 <h4>Same&nbsp;Fringe</h4>
 <p>Consider the problem of writing a routine that checks if two binary trees have the
 <a href="http://c2.com/cgi/wiki?SameFringeProblem">same fringe</a> i.e.  if they have exactly the same leaves reading from left to right. To
@@ -108,7 +107,7 @@ illustrate, all the blue trees below have the same fringe while none of them hav
 the red&nbsp;one.</p>
 <p><img src="/static/images/samefringe.png"></p>
 <p>How would we write a routine that takes two <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/misc/tree.hpp">binary trees</a> and checks if they have the same&nbsp;fringe?</p>
-<p>Simple, check if the post-order traversals of the two trees are the same. That works but is
+<p>Simple, check if the post-order traversals of the two trees are the same. That works, but is
 suboptimal as it requires us to access <em>all</em> leaf nodes in both the trees, always. Looking at all
 nodes is <em>necessary</em> before returning a <code>true</code> but we should be able to return <code>false</code> sooner. For
 example, given the red and any of the blue trees from above, we can return a <code>false</code> after looking
@@ -142,19 +141,15 @@ needed. <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/sa
 <span class="p">{</span>
   <span class="n">generator</span> <span class="n">leaf1</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="n">next_leaf</span><span class="p">,</span> <span class="n">_1</span><span class="p">,</span> <span class="n">one</span><span class="p">));</span>
   <span class="n">generator</span> <span class="n">leaf2</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="n">next_leaf</span><span class="p">,</span> <span class="n">_1</span><span class="p">,</span> <span class="n">two</span><span class="p">));</span>
-
-  <span class="k">while</span><span class="p">(</span><span class="n">leaf1</span> <span class="o">||</span> <span class="n">leaf2</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// while one of the trees has a next leaf</span>
-    <span class="k">if</span><span class="p">(</span><span class="n">leaf1</span> <span class="o">&amp;&amp;</span> <span class="n">leaf2</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// if both have a next leaf</span>
-      <span class="k">if</span><span class="p">(</span><span class="n">leaf1</span><span class="p">.</span><span class="n">get</span><span class="p">()</span> <span class="o">!=</span> <span class="n">leaf2</span><span class="p">.</span><span class="n">get</span><span class="p">())</span> <span class="p">{</span> <span class="c1">// compare the next leaf</span>
-        <span class="k">return</span> <span class="nb">false</span><span class="p">;</span> <span class="c1">// next leaves don&#39;t match. return false.</span>
-      <span class="p">}</span>
-      <span class="n">leaf1</span><span class="p">();</span> <span class="c1">// advance the first tree traversal</span>
-      <span class="n">leaf2</span><span class="p">();</span> <span class="c1">// advance the second tree traversal</span>
-    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span> <span class="c1">// one tree has more leaves than the other.</span>
-      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span> <span class="c1">// leaf count mismatch. return false.</span>
+  <span class="k">for</span><span class="p">(;</span> <span class="n">leaf1</span> <span class="o">&amp;&amp;</span> <span class="n">leaf2</span><span class="p">;</span> <span class="n">leaf1</span><span class="p">(),</span> <span class="n">leaf2</span><span class="p">())</span> <span class="p">{</span><span class="c1">// iterate till *both* traversal are active</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">leaf1</span><span class="p">.</span><span class="n">get</span><span class="p">()</span> <span class="o">!=</span> <span class="n">leaf2</span><span class="p">().</span><span class="n">get</span><span class="p">())</span> <span class="p">{</span><span class="c1">// compare the next leaf node</span>
+      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span><span class="c1">// return false, if they don&#39;t match.</span>
     <span class="p">}</span>
   <span class="p">}</span>
-  <span class="k">return</span> <span class="nb">true</span><span class="p">;</span> <span class="c1">// no mismatches found, return true.</span>
+  <span class="k">if</span><span class="p">(</span><span class="n">leaf1</span> <span class="o">||</span> <span class="n">leaf2</span><span class="p">)</span> <span class="p">{</span><span class="c1">// if one of the traversals is still active,</span>
+    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span><span class="c1">// one tree has more leaves than the other.</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
@@ -175,10 +170,15 @@ needed. <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/sa
 </pre></div>
 
 
-<p>Note that the logical type of the coroutine here is <code>char()</code> because this coroutine is expected to
-generate char values contained in the leaf nodes. That just about does it for my introduction to
-coroutines. Off now to less academic and more practical use cases for coroutines in C++
-programs. Soon to&nbsp;come.</p>
+<p>The logical type of the coroutine here is <code>char()</code> because it is expected to generate char values
+contained in the leaf nodes. The function <code>next_leaf</code> is the implementation function that traverses
+a tree recursively and yields the leaf node values in post-order. The tree instance it has to
+traverse is passed along with the required <code>caller_type&amp;</code> parameter. The <code>same_fringe</code> routine
+instantiates the two generators and binds them to the two trees under consideration. Then it
+extracts the leaves and compares them to ensure that we return false as soon as we&#8217;re certain that
+the fringes differ. In the best case, we return after just one node comparison and that is something
+that is difficult to achieve without using&nbsp;coroutines.</p>
+<p>So then, dear reader, that just about does it for my introduction to coroutines. Hope you found it&nbsp;useful.</p>
 <!-- Comments -->
 <div id="feedback" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div id="disqus_thread"></div>
