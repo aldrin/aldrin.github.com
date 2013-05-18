@@ -105,7 +105,8 @@ conversion operator and the next invocation can be triggered by invoking the fun
 <a href="http://c2.com/cgi/wiki?SameFringeProblem">same fringe</a> i.e.  if they have exactly the same leaves reading from left to right. To
 illustrate, all the blue trees below have the same fringe while none of them have the same fringe as
 the red&nbsp;one.</p>
-<p><img src="/static/images/samefringe.png"></p>
+<p class="text-center"><img src="/static/images/samefringe.png"></p>
+
 <p>How would we write a routine that takes two <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/misc/tree.hpp">binary trees</a> and checks if they have the same&nbsp;fringe?</p>
 <p>Simple, check if the post-order traversals of the two trees are the same. That works, but is
 suboptimal as it requires us to access <em>all</em> leaf nodes in both the trees, always. Looking at all
@@ -119,7 +120,7 @@ traversals.  Pause a little while here and consider writing a subroutine that ca
 <p>The example, though academic, gives us insight that a coroutine based generator is better when it
 makes sense to return partial results early and resume the remaining computation only if
 needed. <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/samefringe.cpp">Here&#8217;s</a> how we do that for the problem&nbsp;above:</p>
-<div class="highlight"><pre><span class="cp">#include &lt;misc/tree.h&gt;</span>
+<div class="highlight"><pre><span class="cp">#include &lt;misc/tree.hpp&gt;</span>
 <span class="cp">#include &lt;boost/bind.hpp&gt;</span>
 <span class="cp">#include &lt;boost/coroutine/all.hpp&gt;</span>
 

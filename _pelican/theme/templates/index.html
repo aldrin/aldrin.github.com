@@ -2,10 +2,11 @@
 {% block title %} Aldrin's Notebook {%endblock%}
 {% block feed %}
 <link href="{{ FEED_DOMAIN }}/{{ FEED_ALL_ATOM }}" type="application/atom+xml" rel="alternate" title="Aldrin's Notebook Feed" />
+<link href='http://fonts.googleapis.com/css?family=Milonga' rel='stylesheet' type='text/css'>
 {% endblock %}
 {% block content %}        
-<center><h1>Aldrin's Notebook</h1>
-<p class="muted">That tundish has been on my mind for a long time</p>
+<center><h1 class="cursive">Aldrin's Notebook</h1>
+<p class="muted">That tundish has been on my mind for a long time. ~ Stephen Dedalus</p>
 </center>
 {% include 'listing.html' %}
 {% endblock content %}

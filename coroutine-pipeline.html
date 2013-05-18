@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Coroutine Pipelines in&nbsp;C++</title>
+    <meta name="author" content="Aldrin D'Souza">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-site-verification" content="WgWezQUyzDnfImQwdhZtLV7Sx8VBOgt9vCnOqgbhF7s"/>
+    <meta name="Description" content="Author: Aldrin D'Souza, Summary: A dataflow-pipeline using coroutines in C++">    <link rel="icon" type="image/x-icon" href="/theme/img/favicon.ico">
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
+    <link href="//fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet" type="text/css">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome-ie7.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/theme/css/code.css">
+    <link rel="stylesheet" type="text/css" href="/theme/css/ajdweb.css">
+    <!--
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}});</script>
+        <script type='text/javascript' src='http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML'></script>
+        -->
+  </head>
+  <body>
+    <div class="container ">
+      <div class="row">
+        <article class="offset1 span10">
+          <h1> Coroutine Pipelines in&nbsp;C++ </h1>
+
+<ul class="breadcrumb">
+  <li><i class="icon-calendar"></i> May 16, 2013</li>
+      <li><i class="icon-tag"></i> <a href="http://aldrin.co/tag/c.html">C++</a></li>
+    <li><i class="icon-tag"></i> <a href="http://aldrin.co/tag/boost.html">Boost</a></li>
+      <li class="pull-right hidden-phone">
+    <i class="icon-comment"></i>
+    <a href="#feedback" data-toggle="modal">Comments?</a>
+  </li>
+</ul>
+<p>This page describes a simple abstraction that allows you to break your program logic into simple
+functions that are wrapped into coroutines and glued together as a Unix shell pipeline. This brings
+the same benefits of flexibility, reusability and composablilty of the Unix shell <em>inside</em> your
+program. The implementation is a <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/pipeline.hpp">single header</a> that requires <a href="http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html">Boost.Coroutine</a> and
+assumes that you have a compiler that can handle C++11. If you are not familiar with
+Boost.Coroutine, you may find it useful to go through <a href="coro-tutorial.html">this page</a> before&nbsp;proceeding.</p>
+<p>Let&#8217;s start with a sample use case for our abstraction. Imagine we have a web <a href="http://ita.ee.lbl.gov/html/contrib/Sask-HTTP.html">access log</a> file
+from which we wish to extract a list of unique client addresses that made unauthorized accesses to
+our webserver. Most Unix shell users know of multiple ways to do this, here&#8217;s&nbsp;one:</p>
+<p class="text-center"><code>cat /tmp/access.log | grep " 403 " | cut -f1 -d' ' | sort | uniq</code></p>
+
+<p>This same solution can be expressed in C++, using the abstraction I&#8217;m presenting here,&nbsp;as:</p>
+<div class="highlight"><pre><span class="cp">#include &lt;coro/shell.hpp&gt;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">shell</span><span class="p">({</span>
+    <span class="n">cat</span><span class="p">(</span><span class="s">&quot;/tmp/access.log&quot;</span><span class="p">),</span>
+    <span class="n">grep</span><span class="p">(</span><span class="s">&quot; 403 &quot;</span><span class="p">),</span>
+    <span class="n">cut</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">uniq</span><span class="p">(),</span>
+    <span class="n">echo</span><span class="p">()</span>
+  <span class="p">});</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>There are no processes being spawned here and <code>cat</code>, <code>grep</code> <code>uniq</code>, <code>echo</code>, etc. are chosen as names
+only to correspond with the familiar Unix tools. Each of these is actually a simple C++ function
+that I refer to as the <em>link</em> function. A <em>link</em> function returns a functor that can be wrapped
+inside a coroutine and be linked into a pipeline. For example, the functor returned by <code>cat</code> can be
+wrapped into a coroutine that&#8217;ll yield lines, from the bound file, into the pipeline. The lines so
+yielded are fed to the coroutine wrapped around <code>grep</code> which <em>selectively</em> yields lines forward only
+if they match the bound regular expression. The actual wiring of these links is done by the <code>shell</code>
+constructor which takes a vector of link functors as input, ties them together into the pipeline and
+executes the&nbsp;pipeline.</p>
+<p>If that&#8217;s not completely clear, its mostly because we haven&#8217;t yet seen any code that does all
+this. Here it&nbsp;is:</p>
+<div class="highlight"><pre><span class="cp">#include &lt;vector&gt;</span>
+<span class="cp">#include &lt;memory&gt;</span>
+<span class="cp">#include &lt;vector&gt;</span>
+
+<span class="cp">#include &lt;boost/bind.hpp&gt;</span>
+<span class="cp">#include &lt;boost/function.hpp&gt;</span>
+<span class="cp">#include &lt;boost/coroutine/coroutine.hpp&gt;</span>
+
+<span class="k">template</span><span class="o">&lt;</span><span class="k">typename</span> <span class="n">T</span><span class="o">&gt;</span>
+<span class="k">class</span> <span class="nc">basic_pipeline</span> <span class="p">{</span>
+<span class="nl">private:</span>
+  <span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">coroutines</span><span class="o">::</span><span class="n">coroutine</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">T</span><span class="o">&amp;</span><span class="p">()</span><span class="o">&gt;</span> <span class="n">coro</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">coro</span><span class="o">&gt;</span> <span class="n">coroptr</span><span class="p">;</span>
+
+<span class="nl">public:</span>
+  <span class="k">typedef</span> <span class="n">coro</span> <span class="n">in</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="k">typename</span> <span class="n">coro</span><span class="o">::</span><span class="n">caller_type</span> <span class="n">out</span><span class="p">;</span>
+  <span class="k">typedef</span> <span class="n">boost</span><span class="o">::</span><span class="n">function</span><span class="o">&lt;</span><span class="kt">void</span><span class="p">(</span><span class="n">in</span><span class="o">&amp;</span><span class="p">,</span> <span class="n">out</span><span class="o">&amp;</span><span class="p">)</span><span class="o">&gt;</span> <span class="n">link</span><span class="p">;</span>
+
+  <span class="n">basic_pipeline</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">link</span><span class="o">&gt;&amp;</span> <span class="n">links</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">coroptr</span><span class="o">&gt;</span> <span class="n">coros</span><span class="p">;</span>
+    <span class="n">coros</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">coroptr</span><span class="p">(</span><span class="k">new</span> <span class="n">coro</span><span class="p">([](</span><span class="n">out</span><span class="o">&amp;</span><span class="p">)</span> <span class="p">{})));</span>
+    <span class="k">for</span><span class="p">(</span><span class="k">auto</span> <span class="o">&amp;</span> <span class="n">l</span> <span class="o">:</span> <span class="n">links</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">coros</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">coroptr</span><span class="p">(</span><span class="k">new</span> <span class="n">coro</span><span class="p">(</span><span class="n">boost</span><span class="o">::</span><span class="n">bind</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">boost</span><span class="o">::</span><span class="n">ref</span><span class="p">(</span><span class="o">*</span><span class="n">coros</span><span class="p">.</span><span class="n">back</span><span class="p">().</span><span class="n">get</span><span class="p">()),</span> <span class="n">_1</span><span class="p">))));</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+
+
+<p>The class <code>basic_pipeline</code> is the lynchpin of the abstraction but all it contains are a few typedefs
+to hide the details and a constructor that takes the link functors we spoke about. The types <code>in</code>
+and <code>out</code> are both coroutine types that generate and/or consume values of the template type <code>T</code>. The
+main extension element of the design is the <code>link</code> function that takes two coroutine references and
+links them. Here&#8217;s the definition of the <code>grep</code> link&nbsp;function:</p>
+<div class="highlight"><pre><span class="k">typedef</span> <span class="n">basic_pipeline</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">shell</span><span class="p">;</span>
+
+<span class="n">shell</span><span class="o">::</span><span class="n">link</span> <span class="n">grep</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">pattern</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">return</span> <span class="p">[</span><span class="n">pattern</span><span class="p">](</span><span class="n">shell</span><span class="o">::</span><span class="n">in</span> <span class="o">&amp;</span> <span class="n">source</span><span class="p">,</span> <span class="n">shell</span><span class="o">::</span><span class="n">out</span> <span class="o">&amp;</span> <span class="n">yield</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">regex</span> <span class="n">regex</span><span class="p">(</span><span class="n">pattern</span><span class="p">);</span>
+    <span class="k">for</span><span class="p">(;</span> <span class="n">source</span><span class="p">;</span> <span class="n">source</span><span class="p">())</span> <span class="p">{</span>
+      <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">line</span><span class="p">(</span><span class="n">source</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+      <span class="k">if</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">regex_search</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">regex</span><span class="p">))</span> <span class="p">{</span>
+        <span class="n">yield</span><span class="p">(</span><span class="n">line</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>The function returns a lambda that implements the logic of grep. It drains the source coroutine, one
+line at a time, checks for a regex match against the captured pattern, and if it matches, yields it
+forward to the coroutine that follows it. In this way, this particular link function is a <em>filter</em>.</p>
+<p>Here&#8217;s a link that&#8217;s a <em>source</em> because it ignores the source coroutine and effectively generates
+strings of its&nbsp;own:</p>
+<div class="highlight"><pre><span class="n">shell</span><span class="o">::</span><span class="n">link</span> <span class="n">cat</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">filename</span><span class="p">)</span>
+<span class="p">{</span>
+  <span class="k">return</span> <span class="p">[</span><span class="n">filename</span><span class="p">](</span><span class="n">shell</span><span class="o">::</span><span class="n">in</span><span class="o">&amp;</span><span class="p">,</span> <span class="n">shell</span><span class="o">::</span><span class="n">out</span> <span class="o">&amp;</span> <span class="n">yield</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">string</span> <span class="n">line</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">ifstream</span> <span class="n">input</span><span class="p">(</span><span class="n">filename</span><span class="p">);</span>
+    <span class="k">while</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">getline</span><span class="p">(</span><span class="n">input</span><span class="p">,</span> <span class="n">line</span><span class="p">))</span> <span class="p">{</span>
+      <span class="n">yield</span><span class="p">(</span><span class="n">line</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>Conversely, here&#8217;s a link thats a <em>sink</em> because it ignores the out coroutine and drains all the
+values generated by its&nbsp;source.</p>
+<div class="highlight"><pre><span class="n">shell</span><span class="o">::</span><span class="n">link</span> <span class="n">echo</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">return</span> <span class="p">[](</span><span class="n">shell</span><span class="o">::</span><span class="n">in</span> <span class="o">&amp;</span> <span class="n">source</span><span class="p">,</span> <span class="n">shell</span><span class="o">::</span><span class="n">out</span><span class="o">&amp;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span><span class="p">(;</span> <span class="n">source</span><span class="p">;</span> <span class="n">source</span><span class="p">())</span> <span class="p">{</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">source</span><span class="p">.</span><span class="n">get</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>There&#8217;s a bunch of other link functions defined in <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/shell.hpp">shell.hpp</a> that our program can&nbsp;use. </p>
+<p>The only thing left to describe now is how these links are connected. That&#8217;s done by the
+<code>basic_pipeline</code> constructor which takes the link functions and wraps them inside coroutine
+instances. The wiring is done by simply binding the <code>in&amp;</code> parameter of each new coroutine to the
+last coroutine&nbsp;constructed. </p>
+<p>That&#8217;s about it, let&#8217;s step back and look at what we have at hand&nbsp;here.</p>
+<h4>Flexibilty and&nbsp;Composability</h4>
+<p>The <code>basic_pipeline</code> abstraction gives us the ability to define <em>links</em> as simple functions that do
+one simple thing and the ability to chain them together flexibly to get interesting things
+done. Consider, for example, what it takes to extend the program we wrote about to look for the
+events we&#8217;re interested in, in not just one file, but for all files in a directory that match a
+certain filename pattern. Furthermore, we want to hold onto the results of the computation (and not
+just print them on the&nbsp;console)</p>
+<p>Here it is, in its&nbsp;entirety:</p>
+<div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">set</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">lines</span><span class="p">;</span>
+  <span class="n">shell</span><span class="p">({</span>
+    <span class="n">ls</span><span class="p">(</span><span class="s">&quot;/tmp&quot;</span><span class="p">),</span>
+    <span class="n">grep</span><span class="p">(</span><span class="s">&quot;*.log&quot;</span><span class="p">),</span>
+    <span class="n">cat</span><span class="p">(),</span>
+    <span class="n">substr</span><span class="p">(</span><span class="s">&quot; 403 &quot;</span><span class="p">),</span>
+    <span class="n">cut</span><span class="p">(</span><span class="s">&quot; &quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">uniq</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+  <span class="p">});</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">lines</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">&lt;&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>All we&#8217;ve done is modify the pipeline above to use a different source (the directory listing link
+<code>ls</code>,) add a filtering link that picks the filenames we&#8217;re interested in, replaced the <code>cat</code> link
+with an overload that acts as a filter (instead of a source) and finally used a version of <code>uniq</code>
+that populates a collection we hand&nbsp;it.</p>
+<p>Finally, note that this is not restricted to strings. The pipeline can be used in any application
+where we need a work-unit to flow through a chain of workers that sequentially resolve it to its
+completion. It can also be used in places where its not a good fit, for example, consider this
+<a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/fizzbuzz.cpp">monstrosity</a> that solves the <a href="http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html">FizzBuzz</a> problem <i class="icon-smile"></i></p>
+<div class="highlight"><pre><span class="cp">#include &lt;iostream&gt;</span>
+<span class="cp">#include &lt;coro/pipeline.hpp&gt;</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+  <span class="k">typedef</span> <span class="n">basic_pipeline</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">fizzbuzz</span><span class="p">;</span>
+
+  <span class="k">auto</span> <span class="n">one2hundred</span> <span class="o">=</span> <span class="p">[](</span><span class="n">fizzbuzz</span><span class="o">::</span><span class="n">in</span><span class="o">&amp;</span><span class="p">,</span> <span class="n">fizzbuzz</span><span class="o">::</span><span class="n">out</span> <span class="o">&amp;</span> <span class="n">yield</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">yield</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+
+  <span class="k">auto</span> <span class="n">fizz</span> <span class="o">=</span> <span class="p">[](</span><span class="n">fizzbuzz</span><span class="o">::</span><span class="n">in</span> <span class="o">&amp;</span> <span class="n">source</span><span class="p">,</span> <span class="n">fizzbuzz</span><span class="o">::</span><span class="n">out</span> <span class="o">&amp;</span> <span class="n">yield</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span><span class="p">(;</span> <span class="n">source</span><span class="p">;</span> <span class="n">source</span><span class="p">())</span> <span class="p">{</span>
+      <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">source</span><span class="p">.</span><span class="n">get</span><span class="p">();</span>
+      <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">3</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;fizz&quot;</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">5</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+          <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+          <span class="k">continue</span><span class="p">;</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+      <span class="n">yield</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+
+  <span class="k">auto</span> <span class="n">buzz</span> <span class="o">=</span> <span class="p">[](</span><span class="n">fizzbuzz</span><span class="o">::</span><span class="n">in</span> <span class="o">&amp;</span> <span class="n">source</span><span class="p">,</span> <span class="n">fizzbuzz</span><span class="o">::</span><span class="n">out</span> <span class="o">&amp;</span> <span class="n">yield</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span><span class="p">(;</span> <span class="n">source</span><span class="p">;</span> <span class="n">source</span><span class="p">())</span> <span class="p">{</span>
+      <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">source</span><span class="p">.</span><span class="n">get</span><span class="p">();</span>
+      <span class="k">if</span><span class="p">(</span><span class="n">i</span> <span class="o">%</span> <span class="mi">5</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="s">&quot;buzz&quot;</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+      <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">yield</span><span class="p">(</span><span class="n">i</span><span class="p">);</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+
+  <span class="k">auto</span> <span class="n">rest</span> <span class="o">=</span> <span class="p">[](</span><span class="n">fizzbuzz</span><span class="o">::</span><span class="n">in</span> <span class="o">&amp;</span> <span class="n">source</span><span class="p">,</span> <span class="n">fizzbuzz</span><span class="o">::</span><span class="n">out</span><span class="o">&amp;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">for</span><span class="p">(;</span> <span class="n">source</span><span class="p">;</span> <span class="n">source</span><span class="p">())</span> <span class="p">{</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">cout</span> <span class="o">&lt;&lt;</span> <span class="n">source</span><span class="p">.</span><span class="n">get</span><span class="p">()</span> <span class="o">&lt;&lt;</span> <span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+
+  <span class="n">fizzbuzz</span><span class="p">({</span><span class="n">one2hundred</span><span class="p">,</span> <span class="n">fizz</span><span class="p">,</span> <span class="n">buzz</span><span class="p">,</span> <span class="n">rest</span><span class="p">});</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<h4>The&nbsp;Cost</h4>
+<p>This flexibility and composability comes at the cost of numerous switches between coroutine contexts
+that make up the pipeline. For a pipeline with <code>l</code> links through which <code>w</code> units of work flow, we go
+through <code>w x l</code> context switches. The <a href="http://www.boost.org/doc/libs/1_53_0/libs/coroutine/doc/html/coroutine/performance.html">performance numbers</a> given by Boost.Coroutine
+suggest that each of these switches would cost roughly 100 <span class="caps">CPU</span> cycles. As long as the computation
+performed inside the link functions dominates this plumbing overhead, we&#8217;re good. Having said that,
+I&#8217;d also like to advise you against taking performance assurances from strangers and people who pull
+numbers out of a hat. The only thing you can trust is a decent&nbsp;profiler.</p>
+<!-- Comments -->
+<div id="feedback" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div id="disqus_thread"></div>
+  <div class="modal-footer">
+    <center>
+      <button class="btn btn-large btn-primary" data-keyboard="true" data-dismiss="modal" aria-hidden="true">Dismiss</button>
+    </center>
+  </div>
+</div>
+          <center>
+            <footer>
+              <div>
+                <a href="https://github.com/aldrin/home"><i class="icon-github "></i></a>
+                                <a href="/"><i class="icon-home "></i></a>
+                                <!-- <a href="http://linkedin.com/in/aldrin"><i class="icon-linkedin"></i></a> -->
+              </div>
+              <small class="muted">&copy; 2013 Aldrin D'Souza</small>
+            </footer>
+          </center>
+        </article>
+      </div>
+    </div>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-37780098-1']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    </script>
+    <script type="text/javascript">
+      /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+      var disqus_shortname = 'a1drin'; // required: replace example with your forum shortname
+
+      /* * * DON'T EDIT BELOW THIS LINE * * */
+      (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = 'http://' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+      })();
+    </script>
+  </body>
+</html>
