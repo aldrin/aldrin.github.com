@@ -38,7 +38,7 @@ functions that are wrapped into coroutines and glued together as a Unix shell pi
 the same benefits of flexibility, reusability and composablilty of the Unix shell <em>inside</em> your
 program. The implementation is a <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/pipeline.hpp">single header</a> that requires <a href="http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html">Boost.Coroutine</a> and
 assumes that you have a compiler that can handle C++11. If you are not familiar with
-Boost.Coroutine, you may find it useful to go through <a href="coro-tutorial.html">this page</a> before&nbsp;proceeding.</p>
+Boost.Coroutine, you may find it useful to go through <a href="coro-basics.html">this page</a> before&nbsp;proceeding.</p>
 <p>Let&#8217;s start with a sample use case for our abstraction. Imagine we have a web <a href="http://ita.ee.lbl.gov/html/contrib/Sask-HTTP.html">access log</a> file
 from which we wish to extract a list of unique client addresses that made unauthorized accesses to
 our webserver. Most Unix shell users know of multiple ways to do this, here&#8217;s&nbsp;one:</p>
