@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"><title>Aldrin's Notebook</title><link href="http://aldrin.co/" rel="alternate"></link><link href="http://aldrin.co/feeds/tech.atom.xml" rel="self"></link><id>http://aldrin.co/</id><updated>2013-05-16T00:00:00+05:30</updated><entry><title>Coroutine Pipelines in C++</title><link href="http://aldrin.co/coroutine-pipeline.html" rel="alternate"></link><updated>2013-05-16T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-05-16:coroutine-pipeline.html</id><summary type="html">&lt;p&gt;This page describes a simple abstraction that allows you to break your program logic into simple
 functions that are wrapped into coroutines and glued together as a Unix shell pipeline. This brings
-the same benefits of flexibility, reusability and composablilty of the Unix shell &lt;em&gt;inside&lt;/em&gt; your
+the benefits of flexibility, reusability and composablilty of the Unix shell model &lt;em&gt;inside&lt;/em&gt; your
 program. The implementation is a &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/pipeline.hpp"&gt;single header&lt;/a&gt; that requires &lt;a href="http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html"&gt;Boost.Coroutine&lt;/a&gt; and
-assumes that you have a compiler that can handle C++11. If you are not familiar with
-Boost.Coroutine, you may find it useful to go through &lt;a href="coro-basics.html"&gt;this page&lt;/a&gt; before&amp;nbsp;proceeding.&lt;/p&gt;
+assumes that you have a compiler that can handle&amp;nbsp;C++11. &lt;/p&gt;
+&lt;div class="alert alert-info"&gt; &lt;button type="button" class="close"
+data-dismiss="alert"&gt;&amp;times;&lt;/button&gt; If you haven&amp;#8217;t worked with Boost.Coroutine before, you may
+want to go through &lt;a href="coro-basics.html"&gt;&lt;i class="icon-external-link"&gt;&lt;/i&gt; this page&lt;/a&gt;
+before proceeding.&lt;/div&gt;
+
 &lt;p&gt;Let&amp;#8217;s start with a sample use case for our abstraction. Imagine we have a web &lt;a href="http://ita.ee.lbl.gov/html/contrib/Sask-HTTP.html"&gt;access log&lt;/a&gt; file
 from which we wish to extract a list of unique client addresses that made unauthorized accesses to
-our webserver. Most Unix shell users know of multiple ways to do this, here&amp;#8217;s&amp;nbsp;one:&lt;/p&gt;
+our webserver. Most Unix shell users will know of multiple ways to do this, here&amp;#8217;s&amp;nbsp;one:&lt;/p&gt;
 &lt;p class="text-center"&gt;&lt;code&gt;cat /tmp/access.log | grep " 403 " | cut -f1 -d' ' | sort | uniq&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;This same solution can be expressed in C++, using the abstraction I&amp;#8217;m presenting here,&amp;nbsp;as:&lt;/p&gt;
@@ -26,15 +30,15 @@ our webserver. Most Unix shell users know of multiple ways to do this, here&amp;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;There are no processes being spawned here and &lt;code&gt;cat&lt;/code&gt;, &lt;code&gt;grep&lt;/code&gt; &lt;code&gt;uniq&lt;/code&gt;, &lt;code&gt;echo&lt;/code&gt;, etc. are chosen as names
-only to correspond with the familiar Unix tools. Each of these is actually a simple C++ function
-that I refer to as the &lt;em&gt;link&lt;/em&gt; function. A &lt;em&gt;link&lt;/em&gt; function returns a functor that can be wrapped
-inside a coroutine and be linked into a pipeline. For example, the functor returned by &lt;code&gt;cat&lt;/code&gt; can be
-wrapped into a coroutine that&amp;#8217;ll yield lines, from the bound file, into the pipeline. The lines so
-yielded are fed to the coroutine wrapped around &lt;code&gt;grep&lt;/code&gt; which &lt;em&gt;selectively&lt;/em&gt; yields lines forward only
-if they match the bound regular expression. The actual wiring of these links is done by the &lt;code&gt;shell&lt;/code&gt;
-constructor which takes a vector of link functors as input, ties them together into the pipeline and
-executes the&amp;nbsp;pipeline.&lt;/p&gt;
+&lt;p&gt;There are no processes being spawned here and &lt;code&gt;cat&lt;/code&gt;, &lt;code&gt;grep&lt;/code&gt;, &lt;code&gt;uniq&lt;/code&gt;, &lt;code&gt;echo&lt;/code&gt;, etc. are chosen as
+names only to correspond with the familiar Unix tools. Each of these is actually a simple C++
+function that I refer to as the &lt;em&gt;link&lt;/em&gt; function. A &lt;em&gt;link&lt;/em&gt; function returns a functor that can be
+wrapped inside a coroutine and be linked into a&amp;nbsp;pipeline. &lt;/p&gt;
+&lt;p&gt;For example, the functor returned by &lt;code&gt;cat&lt;/code&gt; can be wrapped into a coroutine that&amp;#8217;ll yield lines, from
+the bound file, into the pipeline. These lines are fed to the coroutine wrapped around &lt;code&gt;grep&lt;/code&gt; which
+&lt;em&gt;selectively&lt;/em&gt; yields lines forward only if they match the bound regular expression. The actual
+wiring of these links is done by the &lt;code&gt;shell&lt;/code&gt; constructor which takes a vector of link functors as
+input, ties them together into the pipeline and executes the&amp;nbsp;pipeline.&lt;/p&gt;
 &lt;p&gt;If that&amp;#8217;s not completely clear, its mostly because we haven&amp;#8217;t yet seen any code that does all
 this. Here it&amp;nbsp;is:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;vector&amp;gt;&lt;/span&gt;
@@ -67,11 +71,11 @@ this. Here it&amp;nbsp;is:&lt;/p&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;The class &lt;code&gt;basic_pipeline&lt;/code&gt; is the lynchpin of the abstraction but all it contains are a few typedefs
-to hide the details and a constructor that takes the link functors we spoke about. The types &lt;code&gt;in&lt;/code&gt;
-and &lt;code&gt;out&lt;/code&gt; are both coroutine types that generate and/or consume values of the template type &lt;code&gt;T&lt;/code&gt;. The
-main extension element of the design is the &lt;code&gt;link&lt;/code&gt; function that takes two coroutine references and
-links them. Here&amp;#8217;s the definition of the &lt;code&gt;grep&lt;/code&gt; link&amp;nbsp;function:&lt;/p&gt;
+&lt;p&gt;The class &lt;code&gt;basic_pipeline&lt;/code&gt; is the lynchpin of the abstraction and yet all it contains are a few
+typedefs to hide the details and a constructor that takes the link functors we spoke about. The
+types &lt;code&gt;in&lt;/code&gt; and &lt;code&gt;out&lt;/code&gt; are both coroutine types that generate and/or consume values of the template
+type &lt;code&gt;T&lt;/code&gt;. The main extension element of the design is the &lt;code&gt;link&lt;/code&gt; function that takes two coroutine
+references and links them. Here&amp;#8217;s the definition of the &lt;code&gt;grep&lt;/code&gt; link&amp;nbsp;function:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;typedef&lt;/span&gt; &lt;span class="n"&gt;basic_pipeline&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;string&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;shell&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
 &lt;span class="n"&gt;shell&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;link&lt;/span&gt; &lt;span class="n"&gt;grep&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="n"&gt;std&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;string&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt; &lt;span class="n"&gt;pattern&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
@@ -129,11 +133,10 @@ last coroutine&amp;nbsp;constructed. &lt;/p&gt;
 &lt;h4&gt;Flexibilty and&amp;nbsp;Composability&lt;/h4&gt;
 &lt;p&gt;The &lt;code&gt;basic_pipeline&lt;/code&gt; abstraction gives us the ability to define &lt;em&gt;links&lt;/em&gt; as simple functions that do
 one simple thing and the ability to chain them together flexibly to get interesting things
-done. Consider, for example, what it takes to extend the program we wrote about to look for the
+done. Consider, for example, what it takes to extend the program we wrote above to look for the
 events we&amp;#8217;re interested in, in not just one file, but for all files in a directory that match a
 certain filename pattern. Furthermore, we want to hold onto the results of the computation (and not
-just print them on the&amp;nbsp;console)&lt;/p&gt;
-&lt;p&gt;Here it is, in its&amp;nbsp;entirety:&lt;/p&gt;
+just print them on the console). Here&amp;#8217;s the modified version, in its&amp;nbsp;entirety: &lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
 &lt;span class="p"&gt;{&lt;/span&gt;
   &lt;span class="n"&gt;std&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;set&lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;std&lt;/span&gt;&lt;span class="o"&gt;::&lt;/span&gt;&lt;span class="n"&gt;string&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt; &lt;span class="n"&gt;lines&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
@@ -154,10 +157,20 @@ just print them on the&amp;nbsp;console)&lt;/p&gt;
 &lt;code&gt;ls&lt;/code&gt;,) add a filtering link that picks the filenames we&amp;#8217;re interested in, replaced the &lt;code&gt;cat&lt;/code&gt; link
 with an overload that acts as a filter (instead of a source) and finally used a version of &lt;code&gt;uniq&lt;/code&gt;
 that populates a collection we hand&amp;nbsp;it.&lt;/p&gt;
-&lt;p&gt;Finally, note that this is not restricted to strings. The pipeline can be used in any application
-where we need a work-unit to flow through a chain of workers that sequentially resolve it to its
-completion. It can also be used in places where its not a good fit, for example, consider this
-&lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/fizzbuzz.cpp"&gt;monstrosity&lt;/a&gt; that solves the &lt;a href="http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html"&gt;FizzBuzz&lt;/a&gt; problem &lt;i class="icon-smile"&gt;&lt;/i&gt;&lt;/p&gt;
+&lt;h4&gt;The&amp;nbsp;Cost&lt;/h4&gt;
+&lt;p&gt;This flexibility and composability comes at the cost of numerous switches between coroutine contexts
+that make up the pipeline. For a pipeline with &lt;code&gt;l&lt;/code&gt; links through which &lt;code&gt;w&lt;/code&gt; units of work flow, we go
+through &lt;code&gt;w x l&lt;/code&gt; context switches. The &lt;a href="http://www.boost.org/doc/libs/1_53_0/libs/coroutine/doc/html/coroutine/performance.html"&gt;performance numbers&lt;/a&gt; given by Boost.Coroutine
+suggest that each of these switches would cost roughly 100 &lt;span class="caps"&gt;CPU&lt;/span&gt; cycles. As long as the computation
+performed inside the link functions dominates this plumbing overhead, we&amp;#8217;re good, and for non
+trivial applications that is usually the case. Having said that, I&amp;#8217;d like to advise you against
+taking performance assurances from strangers. The only thing you can trust is a decent&amp;nbsp;profiler.&lt;/p&gt;
+&lt;h4&gt;One more&amp;nbsp;thing&lt;/h4&gt;
+&lt;p&gt;Finally, I&amp;#8217;m sure you have noticed, but the pipeline is not restricted to strings. It can be used in
+any application where we need a work-unit to flow through a chain of workers that sequentially
+resolve it to its completion. It can also be used in places where it is not a good fit, for example,
+consider this &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/fizzbuzz.cpp"&gt;monstrosity&lt;/a&gt; that solves the &lt;a href="http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html"&gt;FizzBuzz&lt;/a&gt; problem &lt;i
+class="icon-smile"&gt;&lt;/i&gt;&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;iostream&amp;gt;&lt;/span&gt;
 &lt;span class="cp"&gt;#include &amp;lt;coro/pipeline.hpp&amp;gt;&lt;/span&gt;
 
@@ -207,14 +220,9 @@ completion. It can also be used in places where its not a good fit, for example,
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;h4&gt;The&amp;nbsp;Cost&lt;/h4&gt;
-&lt;p&gt;This flexibility and composability comes at the cost of numerous switches between coroutine contexts
-that make up the pipeline. For a pipeline with &lt;code&gt;l&lt;/code&gt; links through which &lt;code&gt;w&lt;/code&gt; units of work flow, we go
-through &lt;code&gt;w x l&lt;/code&gt; context switches. The &lt;a href="http://www.boost.org/doc/libs/1_53_0/libs/coroutine/doc/html/coroutine/performance.html"&gt;performance numbers&lt;/a&gt; given by Boost.Coroutine
-suggest that each of these switches would cost roughly 100 &lt;span class="caps"&gt;CPU&lt;/span&gt; cycles. As long as the computation
-performed inside the link functions dominates this plumbing overhead, we&amp;#8217;re good. Having said that,
-I&amp;#8217;d also like to advise you against taking performance assurances from strangers and people who pull
-numbers out of a hat. The only thing you can trust is a decent&amp;nbsp;profiler.&lt;/p&gt;</summary><category term="C++"></category><category term="Boost"></category></entry><entry><title>Coroutines in C++</title><link href="http://aldrin.co/coroutine-basics.html" rel="alternate"></link><updated>2013-03-08T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-03-08:coroutine-basics.html</id><summary type="html">&lt;p&gt;An ideal subroutine is a mathematical function; it takes inputs and returns the results of its
+&lt;p&gt;This page was, in part, inspired from an &lt;a href="http://dabeaz.com/coroutines/"&gt;interesting presentation&lt;/a&gt; by a certain David
+Beazley on the practical uses of coroutines in Python. If you haven&amp;#8217;t seen that already, go through
+it, it is&amp;nbsp;great.&lt;/p&gt;</summary><category term="C++"></category><category term="Boost"></category></entry><entry><title>Coroutines in C++</title><link href="http://aldrin.co/coroutine-basics.html" rel="alternate"></link><updated>2013-03-08T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-03-08:coroutine-basics.html</id><summary type="html">&lt;p&gt;An ideal subroutine is a mathematical function; it takes inputs and returns the results of its
 computation. It has a single entry point and all data local to it is initialized upon entry and
 cleaned up when it returns to the caller. The next call, if any, starts all over again and no local
 residues are carried over from the last invocation. A coroutine, is an interesting deviation from

@@ -35,13 +35,17 @@
 </ul>
 <p>This page describes a simple abstraction that allows you to break your program logic into simple
 functions that are wrapped into coroutines and glued together as a Unix shell pipeline. This brings
-the same benefits of flexibility, reusability and composablilty of the Unix shell <em>inside</em> your
+the benefits of flexibility, reusability and composablilty of the Unix shell model <em>inside</em> your
 program. The implementation is a <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/pipeline.hpp">single header</a> that requires <a href="http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html">Boost.Coroutine</a> and
-assumes that you have a compiler that can handle C++11. If you are not familiar with
-Boost.Coroutine, you may find it useful to go through <a href="coro-basics.html">this page</a> before&nbsp;proceeding.</p>
+assumes that you have a compiler that can handle&nbsp;C++11. </p>
+<div class="alert alert-info"> <button type="button" class="close"
+data-dismiss="alert">&times;</button> If you haven&#8217;t worked with Boost.Coroutine before, you may
+want to go through <a href="coro-basics.html"><i class="icon-external-link"></i> this page</a>
+before proceeding.</div>
+
 <p>Let&#8217;s start with a sample use case for our abstraction. Imagine we have a web <a href="http://ita.ee.lbl.gov/html/contrib/Sask-HTTP.html">access log</a> file
 from which we wish to extract a list of unique client addresses that made unauthorized accesses to
-our webserver. Most Unix shell users know of multiple ways to do this, here&#8217;s&nbsp;one:</p>
+our webserver. Most Unix shell users will know of multiple ways to do this, here&#8217;s&nbsp;one:</p>
 <p class="text-center"><code>cat /tmp/access.log | grep " 403 " | cut -f1 -d' ' | sort | uniq</code></p>
 
 <p>This same solution can be expressed in C++, using the abstraction I&#8217;m presenting here,&nbsp;as:</p>
@@ -60,15 +64,15 @@ our webserver. Most Unix shell users know of multiple ways to do this, here&#821
 </pre></div>
 
 
-<p>There are no processes being spawned here and <code>cat</code>, <code>grep</code> <code>uniq</code>, <code>echo</code>, etc. are chosen as names
-only to correspond with the familiar Unix tools. Each of these is actually a simple C++ function
-that I refer to as the <em>link</em> function. A <em>link</em> function returns a functor that can be wrapped
-inside a coroutine and be linked into a pipeline. For example, the functor returned by <code>cat</code> can be
-wrapped into a coroutine that&#8217;ll yield lines, from the bound file, into the pipeline. The lines so
-yielded are fed to the coroutine wrapped around <code>grep</code> which <em>selectively</em> yields lines forward only
-if they match the bound regular expression. The actual wiring of these links is done by the <code>shell</code>
-constructor which takes a vector of link functors as input, ties them together into the pipeline and
-executes the&nbsp;pipeline.</p>
+<p>There are no processes being spawned here and <code>cat</code>, <code>grep</code>, <code>uniq</code>, <code>echo</code>, etc. are chosen as
+names only to correspond with the familiar Unix tools. Each of these is actually a simple C++
+function that I refer to as the <em>link</em> function. A <em>link</em> function returns a functor that can be
+wrapped inside a coroutine and be linked into a&nbsp;pipeline. </p>
+<p>For example, the functor returned by <code>cat</code> can be wrapped into a coroutine that&#8217;ll yield lines, from
+the bound file, into the pipeline. These lines are fed to the coroutine wrapped around <code>grep</code> which
+<em>selectively</em> yields lines forward only if they match the bound regular expression. The actual
+wiring of these links is done by the <code>shell</code> constructor which takes a vector of link functors as
+input, ties them together into the pipeline and executes the&nbsp;pipeline.</p>
 <p>If that&#8217;s not completely clear, its mostly because we haven&#8217;t yet seen any code that does all
 this. Here it&nbsp;is:</p>
 <div class="highlight"><pre><span class="cp">#include &lt;vector&gt;</span>
@@ -101,11 +105,11 @@ this. Here it&nbsp;is:</p>
 </pre></div>
 
 
-<p>The class <code>basic_pipeline</code> is the lynchpin of the abstraction but all it contains are a few typedefs
-to hide the details and a constructor that takes the link functors we spoke about. The types <code>in</code>
-and <code>out</code> are both coroutine types that generate and/or consume values of the template type <code>T</code>. The
-main extension element of the design is the <code>link</code> function that takes two coroutine references and
-links them. Here&#8217;s the definition of the <code>grep</code> link&nbsp;function:</p>
+<p>The class <code>basic_pipeline</code> is the lynchpin of the abstraction and yet all it contains are a few
+typedefs to hide the details and a constructor that takes the link functors we spoke about. The
+types <code>in</code> and <code>out</code> are both coroutine types that generate and/or consume values of the template
+type <code>T</code>. The main extension element of the design is the <code>link</code> function that takes two coroutine
+references and links them. Here&#8217;s the definition of the <code>grep</code> link&nbsp;function:</p>
 <div class="highlight"><pre><span class="k">typedef</span> <span class="n">basic_pipeline</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">shell</span><span class="p">;</span>
 
 <span class="n">shell</span><span class="o">::</span><span class="n">link</span> <span class="n">grep</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span> <span class="n">pattern</span><span class="p">)</span>
@@ -163,11 +167,10 @@ last coroutine&nbsp;constructed. </p>
 <h4>Flexibilty and&nbsp;Composability</h4>
 <p>The <code>basic_pipeline</code> abstraction gives us the ability to define <em>links</em> as simple functions that do
 one simple thing and the ability to chain them together flexibly to get interesting things
-done. Consider, for example, what it takes to extend the program we wrote about to look for the
+done. Consider, for example, what it takes to extend the program we wrote above to look for the
 events we&#8217;re interested in, in not just one file, but for all files in a directory that match a
 certain filename pattern. Furthermore, we want to hold onto the results of the computation (and not
-just print them on the&nbsp;console)</p>
-<p>Here it is, in its&nbsp;entirety:</p>
+just print them on the console). Here&#8217;s the modified version, in its&nbsp;entirety: </p>
 <div class="highlight"><pre><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
 <span class="p">{</span>
   <span class="n">std</span><span class="o">::</span><span class="n">set</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span> <span class="n">lines</span><span class="p">;</span>
@@ -188,10 +191,20 @@ just print them on the&nbsp;console)</p>
 <code>ls</code>,) add a filtering link that picks the filenames we&#8217;re interested in, replaced the <code>cat</code> link
 with an overload that acts as a filter (instead of a source) and finally used a version of <code>uniq</code>
 that populates a collection we hand&nbsp;it.</p>
-<p>Finally, note that this is not restricted to strings. The pipeline can be used in any application
-where we need a work-unit to flow through a chain of workers that sequentially resolve it to its
-completion. It can also be used in places where its not a good fit, for example, consider this
-<a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/fizzbuzz.cpp">monstrosity</a> that solves the <a href="http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html">FizzBuzz</a> problem <i class="icon-smile"></i></p>
+<h4>The&nbsp;Cost</h4>
+<p>This flexibility and composability comes at the cost of numerous switches between coroutine contexts
+that make up the pipeline. For a pipeline with <code>l</code> links through which <code>w</code> units of work flow, we go
+through <code>w x l</code> context switches. The <a href="http://www.boost.org/doc/libs/1_53_0/libs/coroutine/doc/html/coroutine/performance.html">performance numbers</a> given by Boost.Coroutine
+suggest that each of these switches would cost roughly 100 <span class="caps">CPU</span> cycles. As long as the computation
+performed inside the link functions dominates this plumbing overhead, we&#8217;re good, and for non
+trivial applications that is usually the case. Having said that, I&#8217;d like to advise you against
+taking performance assurances from strangers. The only thing you can trust is a decent&nbsp;profiler.</p>
+<h4>One more&nbsp;thing</h4>
+<p>Finally, I&#8217;m sure you have noticed, but the pipeline is not restricted to strings. It can be used in
+any application where we need a work-unit to flow through a chain of workers that sequentially
+resolve it to its completion. It can also be used in places where it is not a good fit, for example,
+consider this <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/fizzbuzz.cpp">monstrosity</a> that solves the <a href="http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html">FizzBuzz</a> problem <i
+class="icon-smile"></i></p>
 <div class="highlight"><pre><span class="cp">#include &lt;iostream&gt;</span>
 <span class="cp">#include &lt;coro/pipeline.hpp&gt;</span>
 
@@ -241,14 +254,9 @@ completion. It can also be used in places where its not a good fit, for example,
 </pre></div>
 
 
-<h4>The&nbsp;Cost</h4>
-<p>This flexibility and composability comes at the cost of numerous switches between coroutine contexts
-that make up the pipeline. For a pipeline with <code>l</code> links through which <code>w</code> units of work flow, we go
-through <code>w x l</code> context switches. The <a href="http://www.boost.org/doc/libs/1_53_0/libs/coroutine/doc/html/coroutine/performance.html">performance numbers</a> given by Boost.Coroutine
-suggest that each of these switches would cost roughly 100 <span class="caps">CPU</span> cycles. As long as the computation
-performed inside the link functions dominates this plumbing overhead, we&#8217;re good. Having said that,
-I&#8217;d also like to advise you against taking performance assurances from strangers and people who pull
-numbers out of a hat. The only thing you can trust is a decent&nbsp;profiler.</p>
+<p>This page was, in part, inspired from an <a href="http://dabeaz.com/coroutines/">interesting presentation</a> by a certain David
+Beazley on the practical uses of coroutines in Python. If you haven&#8217;t seen that already, go through
+it, it is&nbsp;great.</p>
 <!-- Comments -->
 <div id="feedback" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div id="disqus_thread"></div>
