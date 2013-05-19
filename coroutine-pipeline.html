@@ -36,13 +36,8 @@
 <p>This page describes a simple abstraction that allows you to break your program logic into simple
 functions that are wrapped into coroutines and glued together as a Unix shell pipeline. This brings
 the benefits of flexibility, reusability and composablilty of the Unix shell model <em>inside</em> your
-program. The implementation is a <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/pipeline.hpp">single header</a> that requires <a href="http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html">Boost.Coroutine</a> and
-assumes that you have a compiler that can handle&nbsp;C++11. </p>
-<div class="alert alert-info"> <button type="button" class="close"
-data-dismiss="alert">&times;</button> If you haven&#8217;t worked with Boost.Coroutine before, you may
-want to go through <a href="coro-basics.html"><i class="icon-external-link"></i> this page</a>
-before proceeding.</div>
-
+program. The implementation is a <a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/pipeline.hpp">single header</a> that requires
+<a href="coroutine-basics.html">Boost.Coroutine</a> and assumes that you have a compiler that can handle&nbsp;C++11.</p>
 <p>Let&#8217;s start with a sample use case for our abstraction. Imagine we have a web <a href="http://ita.ee.lbl.gov/html/contrib/Sask-HTTP.html">access log</a> file
 from which we wish to extract a list of unique client addresses that made unauthorized accesses to
 our webserver. Most Unix shell users will know of multiple ways to do this, here&#8217;s&nbsp;one:</p>

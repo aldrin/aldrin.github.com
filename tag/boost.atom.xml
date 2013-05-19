@@ -2,13 +2,8 @@
 <feed xmlns="http://www.w3.org/2005/Atom"><title>Aldrin's Notebook</title><link href="http://aldrin.co/" rel="alternate"></link><link href="http://aldrin.co/tag/boost.atom.xml" rel="self"></link><id>http://aldrin.co/</id><updated>2013-05-16T00:00:00+05:30</updated><entry><title>Coroutine Pipelines in C++</title><link href="http://aldrin.co/coroutine-pipeline.html" rel="alternate"></link><updated>2013-05-16T00:00:00+05:30</updated><author><name>Aldrin J D'Souza</name></author><id>tag:aldrin.co,2013-05-16:coroutine-pipeline.html</id><summary type="html">&lt;p&gt;This page describes a simple abstraction that allows you to break your program logic into simple
 functions that are wrapped into coroutines and glued together as a Unix shell pipeline. This brings
 the benefits of flexibility, reusability and composablilty of the Unix shell model &lt;em&gt;inside&lt;/em&gt; your
-program. The implementation is a &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/pipeline.hpp"&gt;single header&lt;/a&gt; that requires &lt;a href="http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html"&gt;Boost.Coroutine&lt;/a&gt; and
-assumes that you have a compiler that can handle&amp;nbsp;C++11. &lt;/p&gt;
-&lt;div class="alert alert-info"&gt; &lt;button type="button" class="close"
-data-dismiss="alert"&gt;&amp;times;&lt;/button&gt; If you haven&amp;#8217;t worked with Boost.Coroutine before, you may
-want to go through &lt;a href="coro-basics.html"&gt;&lt;i class="icon-external-link"&gt;&lt;/i&gt; this page&lt;/a&gt;
-before proceeding.&lt;/div&gt;
-
+program. The implementation is a &lt;a href="https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/pipeline.hpp"&gt;single header&lt;/a&gt; that requires
+&lt;a href="coroutine-basics.html"&gt;Boost.Coroutine&lt;/a&gt; and assumes that you have a compiler that can handle&amp;nbsp;C++11.&lt;/p&gt;
 &lt;p&gt;Let&amp;#8217;s start with a sample use case for our abstraction. Imagine we have a web &lt;a href="http://ita.ee.lbl.gov/html/contrib/Sask-HTTP.html"&gt;access log&lt;/a&gt; file
 from which we wish to extract a list of unique client addresses that made unauthorized accesses to
 our webserver. Most Unix shell users will know of multiple ways to do this, here&amp;#8217;s&amp;nbsp;one:&lt;/p&gt;
