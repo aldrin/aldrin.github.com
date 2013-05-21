@@ -58,3 +58,8 @@ body
 {
     font-family:Milonga, cursive;
 }
+
+blockquote > p
+{
+    font-size: 100%;
+}
