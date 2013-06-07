@@ -1,0 +1,7 @@
+local: false
+pygments: true
+markdown_ext: md
+markdown: redcarpet
+url: http://aldrin.co
+permalink: :title.html
+timezone: Asia/Kolkata

@@ -1,0 +1,24 @@
+---
+layout: base
+---
+<div class="text-center">
+  <h1 class="cursive">
+    {% if page.is_tag %}<i class="icon-tag"></i>{% endif %}
+    {{page.title}}
+  </h1>
+  <p class="muted">{{content}}</p>
+  <ul class="listing nav nav-list">
+    {% for post in site.posts %}
+    {% if page.index or post.tags contains page.tag %}
+    <li>
+      <a href="{{ post.url }}">
+        <span class="hidden-phone">
+          {{ post.date | date: "%b %d, %Y" }} <i class="icon-double-angle-right"></i>
+        </span>
+        {{post.title}}
+      </a>
+    </li>
+    {% endif %}
+    {% endfor %}
+  </ul>
+</div>
