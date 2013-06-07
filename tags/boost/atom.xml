@@ -1,7 +1,6 @@
 ---
 tag: Boost
-is_tag: true
-layout: listing
+layout: feed
 title: Boost C++ Libraries
 ---
 

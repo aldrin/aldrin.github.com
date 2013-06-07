@@ -5,7 +5,7 @@ layout: base
 <ul class="breadcrumb">
   <li><i class="icon-calendar"></i> {{ page.date | date: "%b %d, %Y" }}</li>
   {% for tag in page.tags %}
-  <li><i class="icon-tag"></i> <a href="/tags/{{tag|downcase|replace:'c++','cpp'}}.html">{{ tag }}</a></li>
+  <li><i class="icon-tag"></i> <a href="/tags/{{tag|downcase|replace:'c++','cpp'}}/">{{ tag }}</a></li>
   {% endfor %}
   <li class="pull-right hidden-phone">
     <i class="icon-comment"></i>

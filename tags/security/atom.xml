@@ -1,7 +1,5 @@
 ---
+layout: feed
 tag: Security
-is_tag: true
 title: Security
-layout: listing
 ---
-

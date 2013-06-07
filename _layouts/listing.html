@@ -3,10 +3,10 @@ layout: base
 ---
 <div class="text-center">
   <h1 class="cursive">
-    {% if page.is_tag %}<i class="icon-tag"></i>{% endif %}
+    {% if page.tag %}<i class="icon-tag"></i>{% endif %}
     {{page.title}}
   </h1>
-  <p class="muted">{{content}}</p>
+  {{content}}
   <ul class="listing nav nav-list">
     {% for post in site.posts %}
     {% if page.index or post.tags contains page.tag %}

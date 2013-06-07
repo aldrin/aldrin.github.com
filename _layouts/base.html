@@ -1,3 +1,4 @@
+{% include tagfolder %}
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -12,12 +13,7 @@
     <link href="//fonts.googleapis.com/css?family=Milonga" rel="stylesheet" type="text/css">
     <link href="//fonts.googleapis.com/css?family=Droid+Sans" rel="stylesheet" type="text/css">
     <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome-ie7.css" rel="stylesheet">
-    {% if page.is_tag %}
-    <link href="/feeds/atom.{{page.tag|downcase}}.xml" type="application/atom+xml" rel="alternate" 
-          title="Aldrin's Notebook [#{{page.title}}] ATOM Feed"/>
-    {% else %}
-    <link href="/feeds/atom.xml" type="application/atom+xml" rel="alternate" title="ATOM Feed">
-    {% endif %}
+    <link href="{{feed}}" type="application/atom+xml" rel="alternate" title="{{feed_title}}"/>
     <link rel="stylesheet" type="text/css" href="/css/code.css">
     <link rel="stylesheet" type="text/css" href="/css/ajdweb.css">
   </head>
@@ -31,13 +27,13 @@
               <div>
                 <a href="https://github.com/aldrin/home"><i class="icon-github "></i></a>
                 {% if page.index %}
-                <a href="/feeds/atom.xml"><i class="icon-rss"></i></a>
+                <a href="{{feed}}"><i class="icon-rss"></i></a>
                 {% else %}
                 <a href="/"><i class="icon-home "></i></a>
                 {% endif %}
                 <a href="https://twitter.com/ajdz"><i class="icon-twitter"></i></a>
-                {% if page.is_tag %}
-                <a href="/feeds/atom.{{page.tag|downcase}}.xml"><i class="icon-rss"></i></a>
+                {% if page.tag %}
+                <a href="{{feed}}"><i class="icon-rss"></i></a>
                 {% endif %}
               </div>
               <small class="muted">&copy; {{ site.time | date: "%Y" }} Aldrin D'Souza</small>
