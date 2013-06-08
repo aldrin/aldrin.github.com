@@ -1,7 +1,7 @@
 ---
 layout: base
 ---
-<h1>{{page.title}}</h1>
+<h1 class="cursive">{{page.title}}</h1>
 <ul class="breadcrumb">
   <li><i class="icon-calendar"></i> {{ page.date | date: "%b %d, %Y" }}</li>
   {% for tag in page.tags %}
@@ -12,9 +12,7 @@ layout: base
     <a href="#feedback" data-toggle="modal">Comments?</a>
   </li>
 </ul>
-
 {{ content }}
-
 <!-- Comments -->
 <div id="feedback" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
   <div id="disqus_thread"></div>
