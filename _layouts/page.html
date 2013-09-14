@@ -1,24 +1,40 @@
 ---
 layout: base
 ---
-<h1 class="cursive">{{page.title}}</h1>
-<ul class="breadcrumb">
-  <li><i class="icon-calendar"></i> {{ page.date | date: "%b %d, %Y" }}</li>
-  {% for tag in page.tags %}
-  <li><i class="icon-tag"></i> <a href="/tags/{{tag|downcase|replace:'c++','cpp'}}/">{{ tag }}</a></li>
-  {% endfor %}
-  <li class="pull-right hidden-phone">
-    <i class="icon-comment"></i>
-    <a href="#feedback" data-toggle="modal">Comments?</a>
-  </li>
-</ul>
-{{ content }}
-<!-- Comments -->
-<div id="feedback" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-  <div id="disqus_thread"></div>
-  <div class="modal-footer">
-    <center>
-      <button class="btn btn-large btn-primary" data-keyboard="true" data-dismiss="modal" aria-hidden="true">Dismiss</button>
-    </center>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    {% for tag in page.tags %}
+    <i class="icon-tag"></i> <a href="/tags/{{tag|downcase|replace:'c++','cpp'}}/">{{ tag }}</a>
+    {% endfor %}
+    <span class="pull-right hidden-xs">
+      <i class="icon-calendar"></i> {{ page.date | date: "%B %d, %Y" }}
+      <i class="icon-comment"></i> <a data-toggle="modal" href="#feedback">Comments</a>
+    </span>
+  </div>
+  <div class="panel-body">
+    {{ content }}
+  </div>
+  <div class="panel-footer">
+    {% include footer %}
   </div>
 </div>
+
+<!-- Disqus Modal Dialog -->
+<div class="modal fade" id="feedback" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Have something to say?</h4>
+      </div>
+      <div class="modal-body">
+        <div id="disqus_thread"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+

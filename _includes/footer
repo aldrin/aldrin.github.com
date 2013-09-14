@@ -1,0 +1,18 @@
+{% include tagfolder %}
+<span class="text-muted pull-right">
+  &copy; {{ site.time | date: "%Y" }} Aldrin D'Souza
+</span>
+
+<a href="https://github.com/aldrin/home"><i class="icon-github "></i></a>
+
+{% if page.index %}
+<a href="{{feed}}"><i class="icon-rss"></i></a>
+{% else %}
+<a href="/"><i class="icon-home "></i></a>
+{% endif %}
+
+<a href="https://twitter.com/ajdz"><i class="icon-twitter"></i></a>
+
+{% if page.tag %}
+<a href="{{feed}}"><i class="icon-rss"></i></a>
+{% endif %}

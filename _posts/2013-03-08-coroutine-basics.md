@@ -88,7 +88,7 @@ Consider the problem of writing a routine that checks if two binary trees have t
 illustrate, all the blue trees below have the same fringe while none of them have the same fringe as
 the red one.
 
-<p class="text-center"><img src="/images/samefringe.png"></p>
+<center><img class="img-responsive" src="/images/samefringe.png"></center>
 
 How would we write a routine that takes two [binary trees][mytree] and checks if they have the same
 fringe?
