@@ -282,8 +282,8 @@ some for primitives that use public key cryptography, but I'll leave that for so
 [sha]: http://csrc.nist.gov/groups/ST/toolkit/secure_hashing.html
 [gcm]: http://csrc.nist.gov/publications/nistpubs/800-38D/SP-800-38D.pdf
 [aenc]: http://csrc.nist.gov/groups/ST/toolkit/BCM/modes_development.html#01
-[app]: https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/crypto.cpp
-[header]: https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/crypto.h
-[vectors]: https://github.com/aldrin/home/blob/master/code/c%2B%2B/crypto/vectors.cpp
+[app]: https://github.com/aldrin/cpp/blob/master/crypto/crypto.cpp
+[header]: https://github.com/aldrin/cpp/blob/master/crypto/crypto.h
+[vectors]:https://github.com/aldrin/cpp/blob/master/crypto/vectors.cpp
 [buffer]: http://www.boost.org/doc/libs/release/doc/html/boost_asio/reference/buffer.html
 
