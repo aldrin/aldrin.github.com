@@ -173,7 +173,7 @@ useful.
 [dabeaz]: http://dabeaz.com/coroutines/
 [samefringe]: http://c2.com/cgi/wiki?SameFringeProblem
 [xrange]: http://docs.python.org/2/library/functions.html#xrange
-[mytree]: https://github.com/aldrin/home/blob/master/code/c%2B%2B/misc/tree.hpp
+[mytree]: https://github.com/aldrin/cpp/blob/master/misc/tree.hpp
 [coro]: http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html
-[coroxrange]: https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/xrange.cpp
-[corosf]: https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/samefringe.cpp
+[coroxrange]: https://github.com/aldrin/cpp/blob/master/coro/xrange.cpp
+[corosf]: https://github.com/aldrin/cpp/blob/master/coro/samefringe.cpp

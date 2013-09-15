@@ -247,8 +247,8 @@ is great.
 [dabaez]: http://dabeaz.com/coroutines/
 [log]: http://ita.ee.lbl.gov/html/contrib/Sask-HTTP.html
 [coro]: http://www.boost.org/doc/libs/release/libs/coroutine/doc/html/index.html
-[shell]:  https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/shell.hpp
+[shell]:  https://github.com/aldrin/cpp/blob/master/coro/shell.hpp
 [fb]: http://www.codinghorror.com/blog/2007/02/why-cant-programmers-program.html
-[coropipe]: https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/pipeline.hpp
-[fizzbuzz]: https://github.com/aldrin/home/blob/master/code/c%2B%2B/coro/fizzbuzz.cpp
+[coropipe]: https://github.com/aldrin/cpp/blob/master/coro/pipeline.hpp
+[fizzbuzz]: https://github.com/aldrin/cpp/blob/master/coro/fizzbuzz.cpp
 [coroperf]: http://www.boost.org/doc/libs/1_53_0/libs/coroutine/doc/html/coroutine/performance.html
