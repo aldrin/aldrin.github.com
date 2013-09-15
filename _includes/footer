@@ -3,7 +3,7 @@
   &copy; {{ site.time | date: "%Y" }} Aldrin D'Souza
 </span>
 
-<a href="https://github.com/aldrin/home"><i class="icon-github "></i></a>
+<a href="https://github.com/aldrin"><i class="icon-github "></i></a>
 
 {% if page.index %}
 <a href="{{feed}}"><i class="icon-rss"></i></a>
