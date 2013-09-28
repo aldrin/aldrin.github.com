@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>My Presentation Template</title>
+    <meta name="author" content="Aldrin J D'Souza">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<link rel="stylesheet" href="/slides/css/reveal.min.css">
+		<link rel="stylesheet" href="/slides/css/theme/night.css" id="theme">
+		<link rel="stylesheet" href="/slides/lib/css/ir_black.css">
+		<link rel="stylesheet" href="/slides/css/print/pdf.css" type="text/css" media="print"/>
+	</head>
+
+	<body>
+		<div class="reveal">
+			<div class="slides">
+        <section data-markdown="slides.md" 
+                 data-separator="^\n\n\n" 
+                 data-vertical="^\n\n" 
+                 data-notes="^Note:" 
+                 data-charset="utf-8">
+        </section>
+
+		  </div>
+
+		  <script src="/slides/lib/js/head.min.js"></script>
+		  <script src="/slides/js/reveal.min.js"></script>
+		  <script>
+			  Reveal.initialize({
+        history: true,
+        center: false,
+        transition: 'page',
+
+				math: {
+					// mathjax: 'http://cdn.mathjax.org/mathjax/latest/MathJax.js',
+					config: 'TeX-AMS_HTML-full'
+				},
+
+        dependencies: [
+        // Cross-browser shim that fully implements classList - https://github.com/eligrey/classList.js/
+        { src: '/slides/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+
+        // Interpret Markdown in <section> elements
+        { src: '/slides/plugin/markdown/marked.js' },
+        { src: '/slides/plugin/markdown/markdown.js' },
+
+        // Syntax highlight for <code> elements
+        { src: '/slides/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+
+        // Zoom in and out with Alt+click
+        { src: '/slides/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+
+        // Speaker notes
+        { src: '/slides/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } },
+
+        // MathJax
+        { src: '/slides/plugin/math/math.js', async: true }
+        ]
+
+        });
+		  </script>
+	</body>
+</html>

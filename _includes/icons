@@ -1,0 +1,7 @@
+{% capture icon %}
+{% if post.tags contains "Ulysses" %}
+<i class="text-success icon-bookmark"></i>
+{% else %}
+<i class="text-muted icon-angle-right"></i>
+{% endif %}
+{% endcapture %}
