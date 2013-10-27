@@ -6,7 +6,8 @@ tags: Short
 
 If the number of spaces people leave before and after an assignment operator matters to you and if
 incorrect placement of braces annoys you, you really need to consider elevating your thoughts to the
-realm of larger things. While you do that, here's an elisp function to take care of the code style.
+realm of more important things. While you do that, here's an elisp function to take care of the code
+style.
 
 ``` cl
 (defun code-style (tool args) 
