@@ -1,6 +1,6 @@
 ---
 layout: page
-title: Code Style in Emacs
+title: Invoking Code-Style Tools in Emacs
 tags: Short
 ---
 
