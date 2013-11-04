@@ -17,3 +17,7 @@ pre
     border: 0px;
     background-color:white;
 }
+blockquote p
+{
+    font-size:14px;
+}
