@@ -32,7 +32,7 @@ Once these are on your `PATH` they can be hooked into the mode as follows:
 ``` cl
 ;; invoker for style tools
 (defun clang-format-buffer()
-  "uncrustify buffer"
+  "clang-format buffer"
   (interactive)
   (code-style "clang-format" "-style=LLVM"))
 
@@ -50,7 +50,7 @@ Once these are on your `PATH` they can be hooked into the mode as follows:
 (defun my-python-settings()
   (local-set-key (kbd "M-i") 'pep8-buffer))
 (defun my-c-mode-settings()
-  (local-set-key (kbd "M-i") 'uncrustify-buffer))
+  (local-set-key (kbd "M-i") clang-format-buffer))
 (defun my-js-settings()
   (local-set-key (kbd "M-i") 'jsbeautify-buffer))
 
