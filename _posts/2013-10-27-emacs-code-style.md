@@ -23,7 +23,7 @@ style.
 ```
 
 The function will invoke your favourite code-styling tool on the current buffer. For C++ I prefer
-[uncrustify](http://uncrustify.sourceforge.net), for Python
+[clang-format](http://clang.llvm.org/docs/ClangFormat.html), for Python
 [autopep8](http://pypi.python.org/pypi/autopep8) and for JavaScript
 [jsbeautifier](http://jsbeautifier.org). 
 
@@ -31,10 +31,10 @@ Once these are on your `PATH` they can be hooked into the mode as follows:
 
 ``` cl
 ;; invoker for style tools
-(defun uncrustify-buffer()
-  "uncrustify style on the buffer"
+(defun clang-format-buffer()
+  "uncrustify buffer"
   (interactive)
-  (code-style "uncrustify" "-q -c ~/.uncrustify -l CPP"))
+  (code-style "clang-format" "-style=LLVM"))
 
 (defun pep8-buffer()
   "pep-8 style on the buffer"
