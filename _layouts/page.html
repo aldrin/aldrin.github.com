@@ -4,11 +4,11 @@ layout: base
 <div class="panel panel-default">
   <div class="panel-heading">
     {% for tag in page.tags %}
-    <i class="icon-tag"></i> <a href="/tags/{{tag|downcase|replace:'c++','cpp'}}/">{{ tag }}</a>
+    <i class="fa fa-tag"></i> <a href="/tags/{{tag|downcase|replace:'c++','cpp'}}/">{{ tag }}</a>
     {% endfor %}
     <span class="pull-right hidden-xs">
-      <i class="icon-calendar"></i> {{ page.date | date: "%B %d, %Y" }}
-      <i class="icon-comment"></i> <a data-toggle="modal" href="#feedback">Comments</a>
+      <i class="fa fa-calendar"></i> {{ page.date | date: "%B %d, %Y" }}
+      <i class="fa fa-comment"></i> <a data-toggle="modal" href="#feedback">Comments</a>
     </span>
   </div>
   <div class="panel-body">

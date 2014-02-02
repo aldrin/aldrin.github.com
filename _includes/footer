@@ -3,16 +3,16 @@
   &copy; {{ site.time | date: "%Y" }} Aldrin D'Souza
 </span>
 
-<a href="https://github.com/aldrin"><i class="icon-github "></i></a>
+<a href="https://github.com/aldrin"><i class="fa fa-github "></i></a>
 
 {% if page.index %}
-<a href="{{feed}}"><i class="icon-rss"></i></a>
+<a href="{{feed}}"><i class="fa fa-rss"></i></a>
 {% else %}
-<a href="/"><i class="icon-home "></i></a>
+<a href="/"><i class="fa fa-home "></i></a>
 {% endif %}
 
-<a href="https://twitter.com/ajdz"><i class="icon-twitter"></i></a>
+<a href="https://twitter.com/ajdz"><i class="fa fa-twitter"></i></a>
 
 {% if page.tag %}
-<a href="{{feed}}"><i class="icon-rss"></i></a>
+<a href="{{feed}}"><i class="fa fa-rss"></i></a>
 {% endif %}

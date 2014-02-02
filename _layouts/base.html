@@ -9,9 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="{{feed}}" type="application/atom+xml" rel="alternate" title="{{feed_title}}"/>
     <meta name="google-site-verification" content="WgWezQUyzDnfImQwdhZtLV7Sx8VBOgt9vCnOqgbhF7s"/>
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap.no-icons.min.css" rel="stylesheet">
-    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.min.css" rel="stylesheet"> 
-    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome-ie7.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
     <link href="//fonts.googleapis.com/css?family=Milonga" rel="stylesheet" type="text/css">
     <link href="//fonts.googleapis.com/css?family=Ubuntu:400,700,400italic" rel="stylesheet" type="text/css">
     <link rel="stylesheet" type="text/css" href="/css/code.css">
@@ -21,15 +20,15 @@
     <div class="container">
       <div class="row">
           <h1 class="cursive">
-            {% if page.tag %}<i class="icon-tag"></i>{% endif %}
-            {% if page.index %}<i class="icon-book"></i>{% endif %}
+            {% if page.tag %}<i class="fa fa-tag"></i>{% endif %}
+            {% if page.index %}<i class="fa fa-book"></i>{% endif %}
             {{page.title}}
           </h1>
           {{content}}
       </div>
     </div>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-    <script src="//netdna.bootstrapcdn.com/bootstrap/3.0.0/js/bootstrap.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
     {% include external %}
   </body>
 </html>
