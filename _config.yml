@@ -1,7 +1,13 @@
 local: false
-pygments: true
 markdown_ext: md
 markdown: redcarpet
+highlighter: pygments
 url: http://aldrin.co
 permalink: :title.html
-timezone: Asia/Kolkata
+timezone: America/New_York
+defaults:
+  -
+    scope:
+      path: ""
+    values:
+      layout: "page"

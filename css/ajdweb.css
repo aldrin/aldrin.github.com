@@ -1,23 +1,33 @@
 body
-{ 
-    font-family: 'Ubuntu', sans-serif; 
-    background-image: url('/bg.gif');
-}
-h4
 {
-    font-family: 'Ubuntu', sans-serif; 
+    background-image: url('/bg.gif');
+    font-family: Ubuntu, sans-serif; 
 }
 .cursive
 {
-    font-family: 'Milonga', cursive;
-    text-shadow: 2px 2px 2px #aaa;
+    font-family: Milonga, cursive;
 }
 pre
 {
-    border: 0px;
-    background-color:white;
+    border: 1px dashed #eeeeee;
+    background-color: white;
 }
-blockquote p
+th.tech
 {
-    font-size:14px;
+    color: #d9edf7;
+}
+.etc blockquote p
+{
+    font-size: 14px;
+    font-style: italic;
+}
+div.etc
+{
+    font-family: Georgia, Times, "Times New Roman", serif;
+    line-height: 125%;
+    font-size: 16px;
+}    
+th.etc
+{
+    color: #f2dede;
 }

@@ -3,4 +3,3 @@ layout: listing
 title: Aldrin's Notebook
 index: true
 ---
-That tundish has long been on my mind. ~Stephen Dedalus

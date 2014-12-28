@@ -1,5 +1,4 @@
 ---
-layout: page
 title: Invoking Code-Style Tools in Emacs
 tags: Short
 ---

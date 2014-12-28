@@ -3,14 +3,16 @@ layout: base
 ---
 <div class="panel panel-default">
   <div class="panel-body">
+    {{content}}
     <table>
       <tbody>
         {% for post in site.posts %}
         {% if page.index or post.tags contains page.tag %}
         <tr>
-          <th>
-            <small class="text-muted">
-            {{post.date | date:"%d.%m.%y"}} <i class="fa fa-angle-right"></i>
+          <th class="{{post.categories}}">
+            <small>
+              <span class="text-muted">{{post.date | date:"%d.%m.%y"}}</span>
+              <i class="fa fa-bookmark"></i>
             </small>
             <a href="{{post.url}}">{{post.title}}</a>
           </th>

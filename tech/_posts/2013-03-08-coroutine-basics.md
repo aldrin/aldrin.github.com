@@ -1,5 +1,4 @@
 ---
-layout: page
 title: Coroutines in C++
 tags: C++ Boost
 ---

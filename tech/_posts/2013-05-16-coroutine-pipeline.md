@@ -1,5 +1,4 @@
 ---
-layout: page
 title: Coroutine Pipelines in C++
 tags: C++ Boost
 ---
