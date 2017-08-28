@@ -1,0 +1,5 @@
+<h2 class="cursive">
+{% if page.tag %}<i class="fa fa-tag"></i>{% endif %}
+{% if page.index %}<i class="fa fa-book"></i>{% endif %}
+{{page.title}}
+</h2>

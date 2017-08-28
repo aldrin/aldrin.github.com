@@ -2,7 +2,8 @@
 layout: base
 ---
 <div class="card-header">
-  <a href="/"><i class="fa fa-book "></i></a>
+  {% include header %}
+  <a href="/"><i class="fa fa-angle-double-up"></i></a>
   {% for tag in page.tags %}
   <i class="fa fa-tag"></i> <a href="/tags/{{tag|downcase|replace:'c++','cpp'}}/">{{ tag }}</a>
   {% endfor %}

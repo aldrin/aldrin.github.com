@@ -20,8 +20,8 @@ html {
 }
 body
 {
-    background-image: url('/bg.gif');
     font-family: Ubuntu, sans-serif; 
+    background-image: url('/bg.gif');
 }
 .cursive
 {

@@ -1,7 +1,7 @@
 local: false
 markdown_ext: md
 markdown: redcarpet
-highlighter: pygments
+highlighter: rouge
 url: http://aldrin.co
 permalink: :title.html
 timezone: America/New_York
