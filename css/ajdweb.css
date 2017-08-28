@@ -23,6 +23,12 @@ body
     font-family: Ubuntu, sans-serif; 
     background-image: url('/bg.gif');
 }
+.card
+{
+    -moz-box-shadow: 0 0 4px #aaaaaa;
+    -webkit-box-shadow: 0 0 4px #aaaaaa;
+    box-shadow: 0 0 4px #aaaaaa;
+}
 .cursive
 {
     font-family: Damion, cursive;
@@ -32,29 +38,11 @@ pre
     border: 1px dashed #eeeeee;
     background-color: white;
 }
+th.verse
+{
+    color: #f2dede;
+}
 th.tech
 {
     color: #d9edf7;
 }
-.etc blockquote p
-{
-    font-size: 14px;
-    font-style: italic;
-}
-div.etc
-{
-    font-family: Georgia, Times, "Times New Roman", serif;
-    line-height: 125%;
-    font-size: 16px;
-}    
-th.etc
-{
-    color: #f2dede;
-}
-.card
-{
-    -moz-box-shadow: 0 0 4px #aaaaaa;
-    -webkit-box-shadow: 0 0 4px #aaaaaa;
-    box-shadow: 0 0 4px #aaaaaa;
-}
- 
