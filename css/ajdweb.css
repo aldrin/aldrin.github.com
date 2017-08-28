@@ -51,3 +51,10 @@ th.etc
 {
     color: #f2dede;
 }
+.card
+{
+    -moz-box-shadow: 0 0 4px #aaaaaa;
+    -webkit-box-shadow: 0 0 4px #aaaaaa;
+    box-shadow: 0 0 4px #aaaaaa;
+}
+ 
