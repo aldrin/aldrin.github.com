@@ -1,3 +1,23 @@
+html {
+  font-size: 14px;
+}
+@include media-breakpoint-up(sm) {
+  html {
+    font-size: 16px;
+  }
+}
+
+@include media-breakpoint-up(md) {
+  html {
+    font-size: 20px;
+  }
+}
+
+@include media-breakpoint-up(lg) {
+  html {
+    font-size: 28px;
+  }
+}
 body
 {
     background-image: url('/bg.gif');
@@ -5,7 +25,7 @@ body
 }
 .cursive
 {
-    font-family: Milonga, cursive;
+    font-family: Damion, cursive;
 }
 pre
 {
