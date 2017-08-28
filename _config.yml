@@ -1,6 +1,5 @@
 local: false
 markdown_ext: md
-markdown: redcarpet
 highlighter: rouge
 url: http://aldrin.co
 permalink: :title.html
