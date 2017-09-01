@@ -1,5 +1,5 @@
 ---
-title: Software Project Checklist
+title: Software Project Owner Responsibilities
 tags: Short
 ---
 
