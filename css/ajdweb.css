@@ -20,7 +20,7 @@ html {
 }
 body
 {
-    font-family: Ubuntu, sans-serif; 
+    font-family: sans-serif; 
     background-image: url('/bg.gif');
 }
 .card
@@ -31,7 +31,7 @@ body
 }
 .cursive
 {
-    font-family: Damion, cursive;
+    font-family: cursive;
 }
 pre
 {
