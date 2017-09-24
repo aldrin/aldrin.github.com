@@ -2,21 +2,21 @@
 layout: base
 ---
 <div class="card-body">
-  {% include header %}
-  {{content}}
-  <table>
-    <tbody>
-      {% for post in site.posts %}
-      {% if page.index or post.tags contains page.tag %}
-      <tr>
-        <th class="{{post.categories}}">
-          <i class="fa fa-bookmark"></i>
-          <a href="{{post.url}}">{{post.title}}</a>
-          <small class="text-muted">{{post.date | date_to_string}}</small>
-        </th>
-      </tr>
-      {% endif %}
-      {% endfor %}
-    </tbody>
-  </table>
+    {% include header %}
+    {{content}}
+    <table>
+        <tbody>
+            {% for post in site.posts %}
+            {% if page.index or post.tags contains page.tag %}
+            <tr>
+                <th class="{{post.categories}}">
+                    <i class="fa fa-bookmark"></i>
+                    <a href="{{post.url}}">{{post.title}}</a>
+                    <small class="text-muted">{{post.date | date_to_string}}</small>
+                </th>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
