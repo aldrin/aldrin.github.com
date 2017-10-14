@@ -1,26 +1,6 @@
-html {
-    font-size: 14px;
-}
-
-@include media-breakpoint-up(sm) {
-    html {
-        font-size: 16px;
-    }
-}
-@include media-breakpoint-up(md) {
-    html {
-        font-size: 20px;
-    }
-}
-@include media-breakpoint-up(lg) {
-    html {
-        font-size: 28px;
-    }
-}
-
 body
 {
-    font-family: Comfortaa, sans-serif;
+    font-family: 'PT Serif', sans-serif;
     background-image: url('/bg.gif');
 }
 .card
@@ -32,11 +12,6 @@ body
 .cursive
 {
     font-family: Satisfy, cursive;
-}
-pre
-{
-    border: 1px dashed #eeeeee;
-    background-color: white;
 }
 th.verse
 {
