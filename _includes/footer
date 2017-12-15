@@ -11,7 +11,7 @@
 <a href="/"><i class="fa fa-home "></i></a>
 {% endif %}
 
-<a href="http://www.google.com/recaptcha/mailhide/d?k=01W0tISaYh70Ci12W0z9JWDA==&amp;c=Vq52TQ65zZu_42xTDXg-Fp-HnI8TWo6xVgHtK8B-Za0=" onclick="window.open('http://www.google.com/recaptcha/mailhide/d?k\x3d01W0tISaYh70Ci12W0z9JWDA\x3d\x3d\x26c\x3dVq52TQ65zZu_42xTDXg-Fp-HnI8TWo6xVgHtK8B-Za0\x3d', '', 'toolbar=0,scrollbars=0,location=0,statusbar=0,menubar=0,resizable=0,width=500,height=300'); return false;" title="Reveal this e-mail address"><i class="fa fa-envelope-o"></i></a>
+<a href="mailto:comment@aldrin.co"><i class="fa fa-envelope-o"></i></a>
 
 {% if page.tag %}
 <a href="{{feed}}"><i class="fa fa-rss"></i></a>
