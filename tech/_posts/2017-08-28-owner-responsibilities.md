@@ -5,8 +5,8 @@ tags: Short
 
 If you lead a software project, remember that the role entrusts you with more than the [craft or
 sullen art] of software construction. You also need to manage project **delivery** and ensure code
-**quality**. Most developers understand what these mean but it helps to breaks these down to
-concrete tasks, so here goes:
+**quality**. Most developers understand what these mean but it helps to breaks these
+responsibilities down to concrete tasks, so here goes:
 
 ##### Managing Delivery
 
